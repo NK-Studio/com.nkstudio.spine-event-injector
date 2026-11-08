@@ -1,0 +1,37 @@
+.origin-panel {
+    flex-direction: row;
+    align-items: center;
+    height: 30px;
+    padding: 0 var(--bar-pad);
+    border-top-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-header-bg);
+}
+.origin-panel--hidden { display: none; }
+.origin-panel__caption {
+    margin: 0 var(--space-3) 0 0;
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+    -unity-font-definition: var(--sei-font-bold);
+}
+.origin-panel__path {
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--git-text-muted);
+    font-size: var(--font-small);
+}
+.origin-panel--linked .origin-panel__path { color: var(--git-text); }
+.origin-panel__linked-only { display: none; }
+.origin-panel--linked .origin-panel__linked-only { display: flex; }
+.origin-panel__spacer { flex-grow: 1; }
+.origin-panel__state {
+    margin: 0 var(--space-3);
+    color: var(--git-text-muted);
+    font-size: var(--font-small);
+}
+.origin-panel--synced .origin-panel__state { color: var(--git-success); }
+.origin-panel--missing .origin-panel__state { color: var(--git-accent-fg); }
+.origin-panel--error .origin-panel__state { color: var(--git-danger); }
+.origin-panel__push { display: none; }
+.origin-panel--missing .origin-panel__push { display: flex; }

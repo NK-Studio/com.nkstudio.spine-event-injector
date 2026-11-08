@@ -1,0 +1,14 @@
+{
+  "name": "com.nkstudio.spine-event-injector",
+  "displayName": "Spine Event Injector",
+  "version": "0.1.0",
+  "unity": "6000.0",
+  "description": "Spine 원본(.spine)과 익스포트 데이터(.skel.bytes·.json)에 이벤트 키·정의를 심는 에디터 도구. Spine 프로그램 없이 .spine 미리보기와 이벤트용 도프시트, Unity AnimationEvent 이식, 원본 연결·재익스포트 안전망을 제공한다. spine-unity 런타임이 프로젝트에 있어야 한다.",
+  "author": {
+    "name": "NK Studio"
+  },
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  },
+  "license": "MIT"
+}

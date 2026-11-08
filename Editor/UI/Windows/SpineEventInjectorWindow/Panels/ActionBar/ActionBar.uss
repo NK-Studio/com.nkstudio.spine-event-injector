@@ -1,0 +1,21 @@
+.action-bar {
+    flex-direction: row;
+    align-items: center;
+    height: 36px;
+    padding: 0 var(--bar-pad);
+    border-top-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-header-bg);
+}
+.action-bar__status {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--git-text-muted);
+    font-size: var(--font-small);
+}
+.action-bar--success .action-bar__status { color: var(--git-success); }
+.action-bar--warning .action-bar__status { color: var(--git-warning); }
+.action-bar--error .action-bar__status { color: var(--git-danger); }
+.action-bar__apply { min-width: 84px; }

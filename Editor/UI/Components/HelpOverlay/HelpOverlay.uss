@@ -1,0 +1,60 @@
+.help-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.45);
+    display: none;
+}
+.help-overlay--open { display: flex; }
+.help-overlay__card {
+    width: 460px;
+    max-height: 90%;
+    padding: var(--space-5);
+    border-width: 1px;
+    border-color: var(--git-menu-border);
+    border-radius: 10px;
+    background-color: var(--git-menu-bg);
+}
+.help-overlay__header {
+    flex-direction: row;
+    align-items: center;
+    margin: 0 0 var(--space-3) 0;
+}
+.help-overlay__title {
+    flex-grow: 1;
+    color: var(--git-text-strong);
+    font-size: var(--font-title);
+    -unity-font-definition: var(--sei-font-bold);
+}
+.help-overlay__head {
+    margin: var(--space-4) 0 var(--space-1) 0;
+    color: var(--git-text-secondary);
+    font-size: var(--font-body);
+    -unity-font-definition: var(--sei-font-bold);
+}
+.help-overlay__item {
+    margin: 0 0 var(--space-1) 0;
+    color: var(--git-text);
+    font-size: var(--font-body);
+    white-space: normal;
+}
+.help-overlay__legend {
+    flex-direction: row;
+    align-items: center;
+    margin: 0 0 var(--space-1) var(--space-1);
+}
+.help-overlay__legend .help-overlay__item { margin: 0; flex-shrink: 1; }
+.help-overlay__swatch {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    margin: 0 var(--space-3) 0 0;
+    rotate: 45deg;
+    border-width: 1px;
+}
+.help-overlay__swatch--dirty { background-color: var(--git-warning); border-color: var(--git-bg); }
+.help-overlay__swatch--unsynced { background-color: var(--git-text-secondary); border-color: var(--git-accent-fg); }

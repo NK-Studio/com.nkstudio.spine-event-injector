@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="card" class="confirm-dialog__card">
+        <ui:VisualElement class="confirm-dialog__content">
+            <ui:VisualElement class="confirm-dialog__badge" picking-mode="Ignore">
+                <ui:VisualElement class="confirm-dialog__icon" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement class="confirm-dialog__text">
+                <ui:Label name="title" class="confirm-dialog__title" />
+                <ui:Label name="message" class="confirm-dialog__message" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="confirm-dialog__actions">
+            <ui:Button name="cancel" class="sei-btn confirm-dialog__button" />
+            <ui:Button name="confirm" class="sei-btn confirm-dialog__button confirm-dialog__button--danger" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

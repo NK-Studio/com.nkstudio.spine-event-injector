@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <uie:ObjectField name="asset" class="source-bar__asset sei-field" allow-scene-objects="false" tooltip="SkeletonDataAsset" />
+    <ui:VisualElement name="file" class="source-bar__file">
+        <ui:Label name="file-name" class="source-bar__file-name" picking-mode="Ignore" />
+        <ui:Button name="file-close" text="×" class="source-bar__file-close" tooltip="닫기" />
+    </ui:VisualElement>
+    <ui:Button name="open-spine" text="외부 .spine 열기…" class="sei-btn" />
+    <ui:Button name="recent" text="최근 ▾" class="sei-btn" />
+    <ui:VisualElement class="source-bar__spacer" />
+    <ui:Label name="info" class="source-bar__info" />
+    <ui:Button name="import-unity" class="sei-btn sei-btn--accent source-bar__import" />
+</ui:UXML>

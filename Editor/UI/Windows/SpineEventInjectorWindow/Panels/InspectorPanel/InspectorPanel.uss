@@ -1,0 +1,23 @@
+.inspector-panel {
+    flex-grow: 1;
+    min-width: 220px;
+    background-color: var(--git-sidebar-bg);
+}
+.inspector-panel__empty { margin: var(--space-5); }
+.inspector-panel__section {
+    padding: var(--space-3) var(--space-4);
+    display: none;
+}
+.inspector-panel--key .inspector-panel__key { display: flex; }
+.inspector-panel--multi .inspector-panel__multi { display: flex; }
+.inspector-panel--def .inspector-panel__def { display: flex; }
+.inspector-panel--key .inspector-panel__empty,
+.inspector-panel--multi .inspector-panel__empty,
+.inspector-panel--def .inspector-panel__empty { display: none; }
+.inspector-panel__field { margin: 0 0 var(--space-2) 0; }
+.inspector-panel__caption { margin: 0 0 var(--space-3) 68px; }
+.inspector-panel__buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--space-3);
+}

@@ -1,0 +1,49 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="stage" class="preview-view__stage">
+        <ui:Image name="image" class="preview-view__image" picking-mode="Ignore" />
+        <ui:Label name="message" class="preview-view__message" picking-mode="Ignore" />
+        <ui:VisualElement name="flash" class="preview-view__flash" picking-mode="Ignore" />
+        <ui:VisualElement name="busy" class="preview-view__busy" picking-mode="Ignore">
+            <ui:VisualElement name="busy-card" class="preview-view__busy-card" picking-mode="Ignore">
+                <ui:Label text="미리보기 준비 중" class="preview-view__busy-label" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Button name="skin" class="sei-btn preview-view__skin">
+            <ui:VisualElement name="skin-icon" class="preview-view__skin-icon" picking-mode="Ignore" />
+            <ui:Label name="skin-name" class="preview-view__skin-name" picking-mode="Ignore" />
+            <ui:VisualElement class="preview-view__skin-arrow" picking-mode="Ignore" />
+        </ui:Button>
+        <ui:VisualElement name="zoom-tools" class="preview-view__zoom-tools" picking-mode="Ignore">
+            <ui:Button name="zoom-out" class="sei-icon-btn preview-view__zoom-out" tooltip="축소 (휠)" />
+            <ui:Label name="zoom" class="preview-view__zoom" picking-mode="Ignore" />
+            <ui:Button name="zoom-in" class="sei-icon-btn preview-view__zoom-in" tooltip="확대 (휠)" />
+            <ui:VisualElement class="preview-view__zoom-sep" picking-mode="Ignore" />
+            <ui:Button name="zoom-reset" class="sei-icon-btn preview-view__zoom-reset" tooltip="원래 크기로" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="transport" class="preview-view__transport">
+        <ui:VisualElement class="preview-view__zone">
+            <ui:Button name="prev" class="sei-icon-btn preview-view__prev" tooltip="이전 프레임 (←)" />
+            <ui:Button name="play" class="sei-icon-btn preview-view__play" tooltip="재생/정지 (Space)" />
+            <ui:Button name="next" class="sei-icon-btn preview-view__next" tooltip="다음 프레임 (→)" />
+            <ui:Button name="loop" class="sei-icon-btn preview-view__loop" tooltip="반복 재생" />
+            <ui:Button name="key-prev" class="sei-icon-btn preview-view__key-prev" tooltip="이전 키로 (,)" />
+            <ui:Button name="key-next" class="sei-icon-btn preview-view__key-next" tooltip="다음 키로 (.)" />
+        </ui:VisualElement>
+        <ui:VisualElement name="modes" class="preview-view__modes">
+            <ui:Label class="preview-view__mode-label" text="재생 헤드" />
+            <ui:VisualElement class="sei-seg">
+                <ui:Button name="scrub-free" text="자유" class="sei-seg__btn" tooltip="재생 헤드를 자유롭게 움직입니다" />
+                <ui:Button name="scrub-frame" text="1f" class="sei-seg__btn" tooltip="1프레임 단위로, 키 근처에서는 키에 붙습니다" />
+                <ui:Button name="scrub-key" text="키" class="sei-seg__btn" tooltip="이벤트 키에만 붙습니다" />
+            </ui:VisualElement>
+            <ui:Label class="preview-view__mode-label" text="키 끌기" />
+            <ui:VisualElement class="sei-seg">
+                <ui:Button name="key-free" text="자유" class="sei-seg__btn" tooltip="키를 자유롭게 움직입니다" />
+                <ui:Button name="key-frame" text="1f" class="sei-seg__btn" tooltip="키를 1프레임 단위로 움직입니다" />
+                <ui:Button name="key-head" text="헤드" class="sei-seg__btn" tooltip="재생 헤드 근처면 붙고, 그 밖에는 1프레임 단위로 움직입니다" />
+            </ui:VisualElement>
+            <ui:Button name="speed" text="1×" class="sei-btn preview-view__speed" tooltip="재생 속도" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

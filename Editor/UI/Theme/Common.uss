@@ -1,0 +1,193 @@
+/* 여러 컴포넌트가 함께 쓰는 모양. 값은 테마 변수만 쓴다. */
+
+/* 글꼴은 창 전체에 물려준다 */
+.sei-window { -unity-font-definition: var(--sei-font); }
+
+/* 버튼: 무채색 외곽선이 기본, primary 는 한 창에 하나 */
+.sei-btn {
+    cursor: link;
+    height: var(--ctl-h);
+    padding: 0 var(--space-4);
+    margin: 0 0 0 var(--space-2);
+    border-width: 1px;
+    border-color: var(--git-button-border);
+    border-radius: var(--radius);
+    background-color: var(--git-button-bg);
+    color: var(--git-text);
+    font-size: var(--font-body);
+    transition-property: background-color, border-color, color;
+    transition-duration: 0.12s;
+}
+.sei-btn:hover { background-color: var(--git-button-hover); }
+.sei-btn:active { background-color: var(--git-pressed); }
+.sei-btn:disabled { opacity: 0.45; }
+
+.sei-btn--primary {
+    background-color: var(--git-accent);
+    border-color: var(--git-accent);
+    color: var(--git-on-strong);
+}
+.sei-btn--primary:hover { background-color: var(--git-accent-hover); border-color: var(--git-accent-hover); }
+.sei-btn--primary:active { background-color: var(--git-accent); border-color: var(--git-accent); }
+
+.sei-btn--danger {
+    background-color: var(--git-danger-soft);
+    border-color: var(--git-danger);
+    color: var(--git-text);
+}
+.sei-btn--danger:hover { background-color: var(--git-danger); border-color: var(--git-danger); color: var(--git-on-strong); }
+.sei-btn--danger:active { background-color: var(--git-danger-strong-pressed); }
+
+.sei-btn--accent {
+    background-color: var(--git-accent-soft);
+    border-color: var(--git-accent);
+    color: var(--git-text);
+}
+.sei-btn--accent:hover { background-color: var(--git-accent); color: var(--git-on-strong); }
+.sei-btn--accent:active { background-color: var(--git-accent-hover); color: var(--git-on-strong); }
+
+/* 아이콘 버튼(정사각) */
+.sei-icon-btn {
+    cursor: link;
+    width: var(--ctl-h);
+    height: var(--ctl-h);
+    margin: 0 var(--space-1) 0 0;
+    padding: 0;
+    border-width: 0;
+    border-radius: var(--radius-small);
+    background-color: rgba(0, 0, 0, 0);
+    /* 아이콘은 버튼 크기와 상관없이 늘 16pt(같은 광학 크기) */
+    background-size: 16px 16px;
+    background-position: center;
+    background-repeat: no-repeat;
+    -unity-background-image-tint-color: var(--git-text);
+    transition-property: background-color;
+    transition-duration: 0.12s;
+}
+.sei-icon-btn:hover { background-color: var(--git-hover); }
+.sei-icon-btn:active { background-color: var(--git-pressed); }
+.sei-icon-btn--on { background-color: var(--git-selected); }
+
+/* 뱃지 */
+.sei-badge {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 var(--space-1);
+    border-radius: 8px;
+    background-color: var(--git-badge-bg);
+    color: var(--git-text-secondary);
+    font-size: var(--font-caption);
+    -unity-text-align: middle-center;
+}
+.sei-badge--accent { background-color: var(--git-accent); color: var(--git-on-strong); }
+.sei-badge--warning { background-color: var(--git-warning-soft); color: var(--git-warning); }
+
+/* 구역 머리(사이드바·패널) */
+.sei-section-header {
+    flex-direction: row;
+    align-items: center;
+    height: 28px;
+    padding: 0 var(--space-3) 0 var(--space-4);
+    border-bottom-width: 1px;
+    border-color: var(--git-border);
+}
+.sei-section-header__title {
+    flex-grow: 1;
+    color: var(--git-text-secondary);
+    font-size: var(--font-body);
+    -unity-font-definition: var(--sei-font-bold);
+}
+
+/* 목록 줄 */
+.sei-list-row {
+    cursor: link;
+    flex-direction: row;
+    align-items: center;
+    height: var(--row-h);
+    padding: 0 var(--space-3) 0 var(--space-4);
+}
+/* 목록 상태는 줄 안쪽이 아니라 ListView 항목 전체에 칠한다(안쪽에 칠하면 선택 색 위를 덮는다).
+   Unity 기본 스타일(에디터 스킨 색)을 이기도록 선택자를 길게 쓴다. */
+.sei-window .unity-collection-view .unity-collection-view__item:hover { background-color: var(--git-hover); }
+.sei-window .unity-collection-view .unity-collection-view__item.unity-collection-view__item--selected { background-color: var(--git-selected); }
+.sei-window .unity-collection-view .unity-collection-view__item.unity-collection-view__item--selected:hover { background-color: var(--git-selected); }
+.sei-window .unity-collection-view__item--selected .sei-list-row__name { color: var(--git-selected-text); }
+.sei-list-row__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--git-text);
+    font-size: var(--font-body);
+}
+
+/* 입력칸(내장 컨트롤은 블록 아래로 한정해 고친다) */
+.sei-field .unity-base-field__label {
+    min-width: 64px;
+    color: var(--git-text-secondary);
+    font-size: var(--font-body);
+}
+.sei-field .unity-base-text-field__input,
+.sei-field .unity-base-popup-field__input {
+    border-color: var(--git-field-border);
+    border-radius: var(--radius-small);
+    background-color: var(--git-field-bg);
+    color: var(--git-text);
+}
+
+.sei-hint {
+    color: var(--git-text-muted);
+    font-size: var(--font-small);
+    white-space: normal;
+}
+
+/* 드롭다운·에셋 칸도 누를 수 있는 곳 */
+.sei-field .unity-base-popup-field__input,
+.sei-field .unity-object-field__selector { cursor: link; }
+.sei-field .unity-base-popup-field__input * { cursor: link; }
+
+/* 세그먼트 버튼(여럿 중 하나) */
+.sei-seg {
+    flex-direction: row;
+    flex-shrink: 0;
+    height: 20px;
+    border-width: 1px;
+    border-color: var(--git-border);
+    border-radius: var(--radius-small);
+    overflow: hidden;
+}
+.sei-seg__btn {
+    cursor: link;
+    min-width: 28px;
+    margin: 0;
+    padding: 0 var(--space-2);
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+}
+.sei-seg__btn:hover { background-color: var(--git-hover); }
+.sei-seg__btn:active { background-color: var(--git-pressed); }
+.sei-seg__btn--on { background-color: var(--git-selected); color: var(--git-text-strong); }
+.sei-seg__btn--on:hover { background-color: var(--git-selected); }
+
+/* 에셋 칸: 주변 버튼과 같은 테두리·모서리·높이. 칠은 바깥 칸에만 두어 안쪽이 둥근 모서리를 넘지 않게 한다 */
+.sei-window .unity-object-field .unity-object-field__input {
+    height: var(--ctl-h);
+    border-width: 1px;
+    border-color: var(--git-button-border);
+    border-radius: var(--radius);
+    background-color: var(--git-field-bg);
+    overflow: hidden;
+}
+.sei-window .unity-object-field .unity-object-field-display {
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--git-text);
+}
+.sei-window .unity-object-field .unity-object-field-display__label { color: var(--git-text); }
+.sei-window .unity-object-field .unity-object-field__selector {
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: var(--git-text);
+}

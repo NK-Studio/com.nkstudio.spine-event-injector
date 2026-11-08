@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:sei="NKStudio.SpineEventInjector.UI">
+    <ui:VisualElement name="header" class="event-dopesheet__header">
+        <ui:VisualElement name="corner" class="event-dopesheet__corner">
+            <ui:Label name="frame" class="event-dopesheet__frame" />
+            <ui:Label name="time" class="event-dopesheet__time" />
+            <ui:Button name="add-event" class="sei-icon-btn event-dopesheet__add-event" tooltip="재생 헤드에 이벤트 키 추가" />
+        </ui:VisualElement>
+        <sei:TimeRuler name="ruler" class="event-dopesheet__ruler" />
+    </ui:VisualElement>
+    <ui:VisualElement name="body" class="event-dopesheet__body">
+        <ui:VisualElement name="outside" class="event-dopesheet__outside" picking-mode="Ignore" />
+        <ui:ListView name="rows" class="event-dopesheet__rows" fixed-item-height="24" selection-type="None" show-border="false" />
+        <ui:VisualElement name="playhead" class="event-dopesheet__playhead" picking-mode="Ignore" />
+        <ui:Label name="empty" class="event-dopesheet__empty" text="이벤트 정의가 없습니다. 왼쪽 «이벤트 정의»의 + 로 만드세요." />
+    </ui:VisualElement>
+    <ui:VisualElement name="footer" class="event-dopesheet__footer">
+        <ui:Scroller name="hscroll" class="event-dopesheet__hscroll" direction="Horizontal" />
+    </ui:VisualElement>
+</ui:UXML>

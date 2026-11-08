@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement class="sei-section-header">
+        <ui:Label text="이벤트 정의" class="sei-section-header__title" />
+        <ui:Button name="add" class="sei-icon-btn definition-list__add" tooltip="새 이벤트 정의" />
+    </ui:VisualElement>
+    <ui:Label name="empty" class="sei-hint definition-list__empty" text="이벤트 정의가 없습니다. + 로 만드세요." tooltip="이벤트 정의가 없습니다. + 로 만드세요." />
+    <ui:ListView name="list" class="definition-list__list" fixed-item-height="24" selection-type="Multiple" />
+</ui:UXML>

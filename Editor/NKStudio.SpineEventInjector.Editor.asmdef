@@ -1,0 +1,21 @@
+{
+    "name": "NKStudio.SpineEventInjector.Editor",
+    "rootNamespace": "NKStudio.SpineEventInjector",
+    "references": [
+        "spine-csharp",
+        "spine-unity",
+        "spine-unity-editor",
+        "NKStudio.SpineEventInjector.SpineVersionConverter"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

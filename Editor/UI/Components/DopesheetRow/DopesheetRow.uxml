@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="label" class="dopesheet-row__label">
+        <ui:Label name="name" class="dopesheet-row__name" picking-mode="Ignore" />
+    </ui:VisualElement>
+    <ui:VisualElement name="track" class="dopesheet-row__track" />
+</ui:UXML>

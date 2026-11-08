@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:sei="NKStudio.SpineEventInjector.UI">
+    <ui:VisualElement name="window" class="sei-window">
+        <sei:SourceBar name="source-bar" />
+        <ui:VisualElement name="empty" class="sei-window__empty">
+            <ui:Label class="sei-window__empty-title" text="Spine Event Injector" />
+            <ui:Label class="sei-hint sei-window__empty-text" text="Project 창에서 Spine 스켈레톤(SkeletonDataAsset · .skel.bytes · .json)을 고르거나, 위의 «외부 .spine 열기»로 프로젝트 밖 Spine 원본을 여세요." />
+        </ui:VisualElement>
+        <ui:TwoPaneSplitView name="main" class="sei-window__main" orientation="Horizontal" fixed-pane-index="0" fixed-pane-initial-dimension="220">
+            <ui:VisualElement name="sidebar" class="sei-window__sidebar">
+                <sei:AnimationList name="animations" />
+                <sei:DefinitionList name="definitions" />
+            </ui:VisualElement>
+            <ui:TwoPaneSplitView name="right" orientation="Horizontal" fixed-pane-index="1" fixed-pane-initial-dimension="260">
+                <ui:TwoPaneSplitView name="center" orientation="Vertical" fixed-pane-index="1" fixed-pane-initial-dimension="240">
+                    <sei:PreviewView name="preview" />
+                    <sei:EventDopesheet name="dopesheet" />
+                </ui:TwoPaneSplitView>
+                <sei:InspectorPanel name="inspector" />
+            </ui:TwoPaneSplitView>
+        </ui:TwoPaneSplitView>
+        <sei:OriginPanel name="origin" />
+        <sei:ActionBar name="action-bar" />
+        <sei:HelpOverlay name="help" />
+        <sei:ConfirmDialog name="confirm" />
+    </ui:VisualElement>
+</ui:UXML>

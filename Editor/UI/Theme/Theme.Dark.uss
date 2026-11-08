@@ -1,0 +1,94 @@
+/* 디자인 시트(DesignSheet.md) 다크 토큰. 변수는 여기와 Theme.Light.uss 에서만 정의한다. */
+:root {
+    --git-bg: #191a1c;
+    --git-sidebar-bg: #26282c;
+    --git-header-bg: #26282c;
+    --git-titlebar-bg: #0f1012;
+    --git-menu-bg: #2b2d30;
+    --git-field-bg: #191a1c;
+    --git-button-bg: #26282c;
+    --git-badge-bg: #33353b;
+
+    --git-text-strong: #ffffff;
+    --git-text: #d1d3d9;
+    --git-text-secondary: #a8abb2;
+    --git-text-muted: #80838a;
+    --git-selected-text: #d1d3d9;
+    --git-on-strong: #ffffff;
+
+    --git-border: #33353b;
+    --git-divider: #26282c;
+    --git-field-border: #40434a;
+    --git-button-border: #40434a;
+    --git-menu-border: #43454a;
+
+    --git-hover: #33353b;
+    --git-button-hover: #33353b;
+    --git-pressed: #3c3f45;
+    --git-selected: #2a4371;
+    --git-current-row: #303238;
+
+    --git-accent: #3871e1;
+    --git-accent-hover: #3366cc;
+    --git-accent-fg: #7aa7ff;
+    --git-accent-soft: rgba(56, 113, 225, 0.28);
+
+    --git-success: #5fb865;
+    --git-success-soft: rgba(95, 184, 101, 0.24);
+    --git-success-strong-pressed: #4f9d55;
+    --git-warning: #d6ae58;
+    --git-warning-soft: rgba(214, 174, 88, 0.22);
+    --git-danger: #db5c5c;
+    --git-danger-soft: rgba(219, 92, 92, 0.26);
+    --git-danger-strong-pressed: #c24c4c;
+
+    /* 도프시트 */
+    --sei-grid-line: rgba(255, 255, 255, 0.05);
+    --sei-grid-line-strong: rgba(255, 255, 255, 0.12);
+    --sei-out-of-range: rgba(0, 0, 0, 0.42);
+    --sei-range-band: rgba(122, 167, 255, 0.55);
+    --sei-row-alt: rgba(255, 255, 255, 0.02);
+    --sei-preview-bg: #202124;
+    --sei-checker-a: #4b4c50;
+    --sei-checker-b: #424347;
+
+    /* 아이콘(에디터 내장) */
+    --sei-icon-play: url("../Icons/play_arrow.png");
+    --sei-icon-pause: url("../Icons/pause.png");
+    --sei-icon-prev: url("../Icons/chevron_left.png");
+    --sei-icon-next: url("../Icons/chevron_right.png");
+    --sei-icon-chevron-down: url("../Icons/chevron_down.png");
+    --sei-icon-warning: url("../Icons/warning.png");
+    --sei-icon-key-prev: url("../Icons/skip_previous.png");
+    --sei-icon-key-next: url("../Icons/skip_next.png");
+    --sei-icon-loop: url("../Icons/loop.png");
+    --sei-icon-add: url("../Icons/add.png");
+    --sei-icon-add-event: url("../Icons/add_key.png");
+    --sei-icon-zoom-in: url("../Icons/add.png");
+    --sei-icon-zoom-out: url("../Icons/remove.png");
+    --sei-icon-zoom-reset: url("../Icons/refresh.png");
+    --sei-icon-folder: resource("d_FolderOpened Icon");
+
+    /* 치수 */
+    --radius: 6px;
+    --radius-small: 4px;
+    --bar-h: 32px;
+    --bar-pad: 10px;
+    --bar-gap: 8px;
+    --sei-font: url("../Fonts/SEISansKR-Regular.ttf");
+    --sei-font-bold: url("../Fonts/SEISansKR-Bold.ttf");
+    --ctl-h: 22px;
+    --sei-bar-h: 26px;
+    --sei-bar-ctl: 20px;
+    --row-h: 24px;
+    --sei-label-w: 168px;
+    --space-1: 4px;
+    --space-2: 6px;
+    --space-3: 8px;
+    --space-4: 10px;
+    --space-5: 12px;
+    --font-caption: 10px;
+    --font-small: 11px;
+    --font-body: 12px;
+    --font-title: 13px;
+}

@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="row" class="sei-list-row definition-list__row">
+        <ui:VisualElement name="mark" class="definition-list__mark" picking-mode="Ignore" />
+        <ui:Label name="name" class="sei-list-row__name" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

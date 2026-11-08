@@ -1,0 +1,31 @@
+.sei-window {
+    flex-grow: 1;
+    background-color: var(--git-bg);
+    color: var(--git-text);
+    font-size: var(--font-body);
+}
+.sei-window__main { flex-grow: 1; }
+.sei-window__sidebar {
+    flex-grow: 1;
+    border-right-width: 1px;
+    border-color: var(--git-border);
+}
+.sei-window__empty {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-5);
+    display: none;
+}
+.sei-window__empty-title {
+    margin: 0 0 var(--space-3) 0;
+    color: var(--git-text-strong);
+    font-size: var(--font-title);
+    -unity-font-definition: var(--sei-font-bold);
+}
+.sei-window__empty-text {
+    max-width: 420px;
+    -unity-text-align: middle-center;
+}
+.sei-window--empty .sei-window__empty { display: flex; }
+.sei-window--empty .sei-window__main { display: none; }

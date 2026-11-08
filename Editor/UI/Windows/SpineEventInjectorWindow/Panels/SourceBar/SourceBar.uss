@@ -1,0 +1,58 @@
+.source-bar {
+    flex-direction: row;
+    align-items: center;
+    height: var(--bar-h);
+    padding: 0 var(--bar-pad);
+    border-bottom-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-header-bg);
+}
+.source-bar__asset {
+    width: 260px;
+    margin: 0;
+}
+/* 외부 .spine 을 열었을 때는 에셋 칸 대신 파일 이름 칩(같은 자리·같은 크기) */
+.source-bar__file {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    width: 260px;
+    height: var(--ctl-h);
+    padding: 0 0 0 var(--space-3);
+    border-width: 1px;
+    border-color: var(--git-button-border);
+    border-radius: var(--radius);
+    background-color: var(--git-field-bg);
+}
+.source-bar--external .source-bar__file { display: flex; }
+.source-bar--external .source-bar__asset { display: none; }
+.source-bar__file-name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--git-text);
+    font-size: var(--font-body);
+}
+.source-bar__file-close {
+    cursor: link;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0 0 1px 0;
+    border-width: 0;
+    border-radius: var(--radius-small);
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--git-text-secondary);
+    font-size: 15px;
+    -unity-text-align: middle-center;
+}
+.source-bar__file-close:hover { background-color: var(--git-hover); color: var(--git-text-strong); }
+.source-bar__spacer { flex-grow: 1; }
+.source-bar__info {
+    margin: 0 var(--space-3);
+    color: var(--git-text-muted);
+    font-size: var(--font-small);
+}
+.source-bar__import { display: none; }
+.source-bar--has-unity-events .source-bar__import { display: flex; }

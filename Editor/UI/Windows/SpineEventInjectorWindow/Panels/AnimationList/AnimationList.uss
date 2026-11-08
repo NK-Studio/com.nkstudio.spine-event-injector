@@ -1,0 +1,47 @@
+.animation-list {
+    flex-grow: 1;
+    flex-basis: 0;
+    background-color: var(--git-sidebar-bg);
+}
+.animation-list__list { flex-grow: 1; }
+.animation-list__list .unity-list-view__empty-label { display: none; }
+
+/* 제목 줄 오른쪽의 스켈레톤 고르기(스켈레톤이 둘 이상일 때만) */
+.animation-list .animation-list__skeleton {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 1;
+    height: 22px;
+    max-width: 190px;
+    margin: 0 0 0 var(--space-2);
+    padding: 0 var(--space-1) 0 var(--space-2);
+}
+.animation-list--skeletons .animation-list__skeleton { display: flex; }
+.animation-list--skeletons .sei-section-header__title { flex-shrink: 0; }
+.animation-list__skeleton-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-right: var(--space-1);
+}
+.animation-list__skeleton-name {
+    flex-shrink: 1;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: middle; /* 이름은 끝 번호로 구분되는 일이 많다 */
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+}
+.animation-list__skeleton-arrow {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-left: var(--space-1);
+    background-image: var(--sei-icon-chevron-down);
+    background-size: 16px 16px;
+    -unity-background-image-tint-color: var(--git-text-secondary);
+}

@@ -1,0 +1,91 @@
+/* 디자인 시트(DesignSheet.md) 라이트 토큰. */
+:root {
+    --git-bg: #eceef1;
+    --git-sidebar-bg: #e4e6ea;
+    --git-header-bg: #e4e6ea;
+    --git-titlebar-bg: #d9dce1;
+    --git-menu-bg: #f0f1f4;
+    --git-field-bg: #f3f4f6;
+    --git-button-bg: #eff0f3;
+    --git-badge-bg: #d9dbe1;
+
+    --git-text-strong: #000000;
+    --git-text: #000000;
+    --git-text-secondary: #4e5260;
+    --git-text-muted: #6c707e;
+    --git-selected-text: #000000;
+    --git-on-strong: #ffffff;
+
+    --git-border: #d3d6dc;
+    --git-divider: #d9dce1;
+    --git-field-border: #c9ccd6;
+    --git-button-border: #c9ccd6;
+    --git-menu-border: #dfe1e5;
+
+    --git-hover: #d5d8de;
+    --git-button-hover: #e6e8ec;
+    --git-pressed: #c9ccd3;
+    --git-selected: #c9d8fb;
+    --git-current-row: #dcdfe4;
+
+    --git-accent: #3574f0;
+    --git-accent-hover: #3369d6;
+    --git-accent-fg: #1d55b8;
+    --git-accent-soft: rgba(53, 116, 240, 0.12);
+
+    --git-success: #208a3c;
+    --git-success-soft: rgba(32, 138, 60, 0.12);
+    --git-success-strong-pressed: #1b7533;
+    --git-warning: #a46704;
+    --git-warning-soft: rgba(164, 103, 4, 0.12);
+    --git-danger: #db3b4b;
+    --git-danger-soft: rgba(219, 59, 75, 0.12);
+    --git-danger-strong-pressed: #c22f3f;
+
+    --sei-grid-line: rgba(0, 0, 0, 0.05);
+    --sei-grid-line-strong: rgba(0, 0, 0, 0.12);
+    --sei-out-of-range: rgba(0, 0, 0, 0.10);
+    --sei-range-band: rgba(53, 116, 240, 0.45);
+    --sei-row-alt: rgba(0, 0, 0, 0.02);
+    --sei-preview-bg: #e4e6ea;
+    --sei-checker-a: #dfe1e6;
+    --sei-checker-b: #d3d6dc;
+
+    --sei-icon-play: url("../Icons/play_arrow.png");
+    --sei-icon-pause: url("../Icons/pause.png");
+    --sei-icon-prev: url("../Icons/chevron_left.png");
+    --sei-icon-next: url("../Icons/chevron_right.png");
+    --sei-icon-chevron-down: url("../Icons/chevron_down.png");
+    --sei-icon-warning: url("../Icons/warning.png");
+    --sei-icon-key-prev: url("../Icons/skip_previous.png");
+    --sei-icon-key-next: url("../Icons/skip_next.png");
+    --sei-icon-loop: url("../Icons/loop.png");
+    --sei-icon-add: url("../Icons/add.png");
+    --sei-icon-add-event: url("../Icons/add_key.png");
+    --sei-icon-zoom-in: url("../Icons/add.png");
+    --sei-icon-zoom-out: url("../Icons/remove.png");
+    --sei-icon-zoom-reset: url("../Icons/refresh.png");
+    --sei-icon-folder: resource("FolderOpened Icon");
+
+    --radius: 6px;
+    --radius-small: 4px;
+    --bar-h: 32px;
+    --bar-pad: 10px;
+    --bar-gap: 8px;
+    --sei-font: url("../Fonts/SEISansKR-Regular.ttf");
+    --sei-font-bold: url("../Fonts/SEISansKR-Bold.ttf");
+    --ctl-h: 22px;
+    --sei-bar-h: 26px;
+    --sei-bar-ctl: 20px;
+    --row-h: 24px;
+    --sei-label-w: 168px;
+    --space-1: 4px;
+    --space-2: 6px;
+    --space-3: 8px;
+    --space-4: 10px;
+    --space-5: 12px;
+    --font-caption: 10px;
+    --font-small: 11px;
+    --font-body: 12px;
+    --font-title: 13px;
+}

@@ -1,0 +1,4 @@
+SEI Sans KR is a subset of IBM Plex Sans KR (Regular, Bold), containing only the
+characters this tool displays. It is renamed because "Plex" is a Reserved Font Name
+and a subset is a Modified Version under the SIL Open Font License 1.1 (see OFL.txt).
+Copyright 2017 IBM Corp.

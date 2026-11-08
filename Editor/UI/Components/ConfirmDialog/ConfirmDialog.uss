@@ -1,0 +1,86 @@
+.confirm-dialog {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.78);
+    display: none;
+}
+.confirm-dialog--open { display: flex; }
+.confirm-dialog__card {
+    width: 420px;
+    max-width: 90%;
+    padding: 20px;
+    border-width: 1px;
+    border-color: var(--git-menu-border);
+    border-radius: 12px;
+    background-color: var(--git-menu-bg);
+}
+.confirm-dialog__content {
+    flex-direction: row;
+    align-items: center;
+    margin: 0 0 20px 0;
+}
+/* 빨강은 이 원과 위험 버튼에만 쓴다 */
+.confirm-dialog__badge {
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-right: 16px;
+    border-radius: 24px;
+    background-color: var(--git-danger);
+}
+/* 104px 원본을 밉맵으로 26 에 그린다(레티나 52 = 절반). 삼각형은 무게 중심이 낮아 살짝 올린다 */
+.confirm-dialog__icon {
+    width: 26px;
+    height: 26px;
+    translate: 0 -1px;
+    background-image: var(--sei-icon-warning);
+    background-size: 26px 26px;
+    -unity-background-image-tint-color: var(--git-on-strong);
+}
+.confirm-dialog__text {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.confirm-dialog__title {
+    margin: 0 0 8px 0;
+    padding: 0;
+    white-space: normal;
+    color: var(--git-text-strong);
+    font-size: 16px;
+    -unity-font-definition: var(--sei-font-bold);
+}
+.confirm-dialog__message {
+    margin: 0;
+    padding: 0;
+    white-space: normal;
+    color: var(--git-text);
+    font-size: var(--font-title);
+}
+.confirm-dialog__actions {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+.confirm-dialog__button {
+    height: 30px;
+    min-width: 88px;
+    margin: 0 0 0 var(--space-3);
+    padding: 0 var(--space-5);
+}
+.confirm-dialog .confirm-dialog__button--danger {
+    border-color: var(--git-danger);
+    background-color: var(--git-danger);
+    color: var(--git-on-strong);
+    -unity-font-definition: var(--sei-font-bold);
+}
+.confirm-dialog .confirm-dialog__button--danger:hover {
+    border-color: var(--git-danger-strong-pressed);
+    background-color: var(--git-danger-strong-pressed);
+}
+.confirm-dialog .confirm-dialog__button--danger:active { background-color: var(--git-danger-strong-pressed); }

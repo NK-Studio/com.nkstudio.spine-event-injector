@@ -1,0 +1,29 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement class="sei-section-header">
+        <ui:Label name="title" text="속성" class="sei-section-header__title" />
+    </ui:VisualElement>
+    <ui:Label name="empty" class="sei-hint inspector-panel__empty" text="도프시트에서 키를 고르거나 왼쪽에서 이벤트 정의를 고르세요." />
+    <ui:VisualElement name="key" class="inspector-panel__section inspector-panel__key">
+        <ui:DropdownField name="key-event" label="이벤트" class="sei-field inspector-panel__field" />
+        <ui:FloatField name="key-frame" label="프레임" is-delayed="true" class="sei-field inspector-panel__field" />
+        <ui:Label name="key-seconds" class="sei-hint inspector-panel__caption" />
+        <ui:IntegerField name="key-int" label="Int" is-delayed="true" class="sei-field inspector-panel__field" />
+        <ui:FloatField name="key-float" label="Float" is-delayed="true" class="sei-field inspector-panel__field" />
+        <ui:TextField name="key-string" label="String" is-delayed="true" class="sei-field inspector-panel__field" />
+        <ui:VisualElement class="inspector-panel__buttons">
+            <ui:Button name="key-delete" text="키 삭제" class="sei-btn sei-btn--danger" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="multi" class="inspector-panel__section inspector-panel__multi">
+        <ui:Label name="multi-text" class="sei-hint" />
+        <ui:VisualElement class="inspector-panel__buttons">
+            <ui:Button name="multi-delete" text="선택한 키 삭제" class="sei-btn sei-btn--danger" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="def" class="inspector-panel__section inspector-panel__def">
+        <ui:TextField name="def-name" label="이름" is-delayed="true" class="sei-field inspector-panel__field" />
+        <ui:IntegerField name="def-int" label="Int" is-delayed="true" class="sei-field inspector-panel__field" />
+        <ui:FloatField name="def-float" label="Float" is-delayed="true" class="sei-field inspector-panel__field" />
+        <ui:TextField name="def-string" label="String" is-delayed="true" class="sei-field inspector-panel__field" />
+    </ui:VisualElement>
+</ui:UXML>

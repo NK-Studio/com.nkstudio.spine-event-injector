@@ -1,0 +1,28 @@
+.definition-list {
+    flex-grow: 1;
+    flex-basis: 0;
+    border-top-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-sidebar-bg);
+}
+.definition-list__list { flex-grow: 1; }
+.definition-list__add { width: 20px; height: 20px; background-image: var(--sei-icon-add); }
+/* 원본(.spine)에 없는 정의 표시. 글자 자리를 차지하지 않게 왼쪽 여백 위에 띄운다 */
+.definition-list__mark {
+    position: absolute;
+    left: 2px;
+    top: 9px;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+}
+.definition-list__row--unsynced .definition-list__mark { background-color: var(--git-accent-fg); }
+.definition-list__list .unity-list-view__empty-label { display: none; }
+.definition-list__empty {
+    margin: var(--space-3) var(--space-4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: none;
+}
+.definition-list--empty .definition-list__empty { display: flex; }

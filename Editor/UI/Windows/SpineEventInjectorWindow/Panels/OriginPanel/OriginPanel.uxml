@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Label text="원본(.spine)" class="origin-panel__caption" />
+    <ui:Label name="path" class="origin-panel__path" />
+    <ui:Button name="link" text="연결…" class="sei-btn" />
+    <ui:Button name="unlink" text="해제" class="sei-btn origin-panel__linked-only" />
+    <ui:Button name="refresh" text="다시 비교" class="sei-btn origin-panel__linked-only" />
+    <ui:VisualElement class="origin-panel__spacer" />
+    <ui:Label name="state" class="origin-panel__state" />
+    <ui:Button name="push" text="원본에 반영" class="sei-btn sei-btn--accent origin-panel__push" />
+</ui:UXML>

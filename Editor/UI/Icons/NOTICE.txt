@@ -1,0 +1,2 @@
+All icons in this folder are drawn for Spine Event Injector (Tools~/.. see icons-tools/seiicons.swift in the
+development scratch): one 16pt grid, 1.75pt round strokes, rendered at 4x (64px). No third-party icon assets.

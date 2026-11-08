@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="labels" class="time-ruler__labels" picking-mode="Ignore" />
+</ui:UXML>

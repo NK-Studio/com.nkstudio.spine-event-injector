@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Label name="status" class="action-bar__status" />
+    <ui:Button name="revert" text="되돌리기" class="sei-btn" />
+    <ui:Button name="apply" text="적용하기" class="sei-btn sei-btn--primary action-bar__apply" />
+</ui:UXML>

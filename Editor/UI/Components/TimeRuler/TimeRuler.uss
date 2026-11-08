@@ -1,0 +1,27 @@
+.time-ruler {
+    cursor: resize-horizontal;
+    flex-grow: 1;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--git-header-bg);
+    --sei-tick: var(--git-text-muted);
+    --sei-tick-minor: var(--git-border);
+    --sei-playhead-color: var(--git-accent);
+    --sei-range-color: var(--sei-out-of-range);
+    --sei-band-color: var(--sei-range-band);
+    --sei-end-color: var(--git-text-secondary);
+}
+.time-ruler__labels {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+.time-ruler__label {
+    position: absolute;
+    top: 2px;
+    padding: 0 0 0 var(--space-1);
+    color: var(--git-text-muted);
+    font-size: var(--font-caption);
+}

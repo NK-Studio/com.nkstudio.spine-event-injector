@@ -1,0 +1,62 @@
+.dopesheet-row {
+    flex-direction: row;
+    height: var(--row-h);
+    border-bottom-width: 1px;
+    border-color: var(--git-divider);
+}
+.dopesheet-row--odd { background-color: var(--sei-row-alt); }
+.dopesheet-row--selected .dopesheet-row__label { background-color: var(--git-current-row); }
+
+.dopesheet-row__label {
+    cursor: link;
+    flex-direction: row;
+    align-items: center;
+    width: var(--sei-label-w);
+    min-width: var(--sei-label-w);
+    padding: 0 var(--space-2) 0 var(--space-4);
+    border-right-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-sidebar-bg);
+}
+.dopesheet-row__label:hover { background-color: var(--git-hover); }
+.dopesheet-row__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--git-text);
+    font-size: var(--font-body);
+}
+
+.dopesheet-row__track {
+    flex-grow: 1;
+    overflow: hidden;
+    --sei-grid: var(--sei-grid-line);
+    --sei-grid-strong: var(--sei-grid-line-strong);
+    --sei-range: var(--sei-out-of-range);
+}
+
+/* 키: 마름모(회전한 정사각). 위치는 C# 이 계산해 넣는다 */
+.dopesheet-row__key {
+    cursor: move-arrow;
+    position: absolute;
+    top: 7px;
+    width: 9px;
+    height: 9px;
+    margin-left: -4px;
+    rotate: 45deg;
+    border-width: 1px;
+    border-radius: 1px;
+    border-color: var(--git-bg);
+    background-color: var(--git-text-secondary);
+    transition-property: background-color, scale;
+    transition-duration: 0.08s;
+}
+.dopesheet-row__key:hover { scale: 1.25 1.25; }
+.dopesheet-row__key--dirty { background-color: var(--git-warning); }
+.dopesheet-row__key--unsynced { border-color: var(--git-accent-fg); }
+.dopesheet-row__key--selected { background-color: var(--git-accent); border-color: var(--git-text-strong); }
+.dopesheet-row__key--flash { scale: 1.6 1.6; }
+
+/* 빈 키 줄: 정의가 아니므로 이름을 흐리게 */
+.dopesheet-row--empty .dopesheet-row__name { color: var(--git-text-muted); -unity-font-style: italic; }

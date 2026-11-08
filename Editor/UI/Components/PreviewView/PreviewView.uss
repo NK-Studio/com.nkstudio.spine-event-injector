@@ -1,0 +1,217 @@
+.preview-view {
+    flex-grow: 1;
+    min-height: 120px;
+    --sei-preview-clear: var(--sei-preview-bg);
+    --sei-preview-checker-a: var(--sei-checker-a);
+    --sei-preview-checker-b: var(--sei-checker-b);
+}
+.preview-view__stage {
+    flex-grow: 1;
+    background-color: var(--sei-checker-b);
+    overflow: hidden;
+}
+/* 그려진 크기 그대로 왼쪽 위에 둔다: 판 크기가 바뀐 직후 한 프레임 동안 이전 그림이 늘어나 보이지 않게 */
+.preview-view__image {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+.preview-view__message {
+    position: absolute;
+    left: var(--space-5);
+    right: var(--space-5);
+    top: 0;
+    bottom: 0;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    color: var(--git-text-muted);
+    font-size: var(--font-body);
+    display: none;
+}
+.preview-view--message .preview-view__message { display: flex; }
+
+/* 준비 중: 가운데 카드가 살짝 커지며 나타난다 */
+.preview-view__busy {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.2s;
+}
+.preview-view--busy .preview-view__busy { opacity: 1; }
+.preview-view__busy-card {
+    align-items: center;
+    padding: 18px 26px 14px 26px;
+    border-width: 1px;
+    border-color: var(--git-button-border);
+    border-radius: 14px;
+    background-color: var(--git-header-bg);
+    scale: 0.96 0.96;
+    transition-property: scale;
+    transition-duration: 0.25s;
+    transition-timing-function: ease-out-cubic;
+}
+.preview-view--busy .preview-view__busy-card { scale: 1 1; }
+.activity-indicator {
+    width: 26px;
+    height: 26px;
+    --sei-activity-color: var(--git-text-secondary);
+}
+.preview-view__busy-label {
+    margin: 11px 0 0 0;
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+    -unity-text-align: middle-center;
+}
+
+.preview-view__flash {
+    position: absolute;
+    left: var(--space-3);
+    top: var(--space-3);
+    flex-direction: column;
+    align-items: flex-start;
+}
+.preview-view__flash-item {
+    margin: 0 0 var(--space-1) 0;
+    padding: 2px var(--space-3);
+    border-radius: var(--radius-small);
+    background-color: var(--git-accent);
+    color: var(--git-on-strong);
+    font-size: var(--font-small);
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.6s;
+}
+.preview-view__flash-item--fade { opacity: 0; }
+
+.preview-view__transport {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+    height: 28px;
+    padding: 0 var(--space-3);
+    border-top-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-header-bg);
+}
+.preview-view__prev { background-image: var(--sei-icon-prev); }
+.preview-view__next { background-image: var(--sei-icon-next); }
+.preview-view__play { background-image: var(--sei-icon-play); }
+.preview-view--playing .preview-view__play { background-image: var(--sei-icon-pause); }
+.preview-view__loop { background-image: var(--sei-icon-loop); }
+.preview-view__key-prev { margin-left: var(--space-3); background-image: var(--sei-icon-key-prev); }
+.preview-view__key-next { background-image: var(--sei-icon-key-next); }
+/* 도구 막대 = 재생 버튼(왼쪽) | 모드(오른쪽 맞춤) */
+.preview-view__zone {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+}
+.preview-view__modes { flex-grow: 1; flex-shrink: 1; }
+.preview-view__modes {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+}
+.preview-view__mode-label {
+    margin: 0 var(--space-2) 0 var(--space-4);
+    color: var(--git-text-muted);
+    font-size: var(--font-small);
+}
+.preview-view__speed {
+    height: 20px;
+    min-width: 36px;
+    margin: 0 0 0 var(--space-4);
+    padding: 0 var(--space-2);
+    font-size: var(--font-small);
+}
+.preview-view--narrow .preview-view__mode-label { display: none; }
+.preview-view--narrow .sei-seg { margin-left: var(--space-3); }
+.preview-view__transport { overflow: hidden; }
+.preview-view__transport .sei-icon-btn { flex-shrink: 0; }
+/* 미리보기 왼쪽 아래의 스킨 고르기(스킨이 둘 이상일 때만) */
+.preview-view .preview-view__skin {
+    display: none;
+    position: absolute;
+    left: var(--space-3);
+    bottom: var(--space-3);
+    flex-direction: row;
+    align-items: center;
+    height: 28px;
+    max-width: 220px;
+    margin: 0;
+    padding: 0 var(--space-2) 0 var(--space-3);
+    background-color: var(--git-header-bg);
+}
+.preview-view--skins .preview-view__skin { display: flex; }
+.preview-view .preview-view__skin:hover { background-color: var(--git-button-hover); }
+.preview-view .preview-view__skin:active { background-color: var(--git-pressed); }
+/* Spine 패키지의 스킨 아이콘을 원래 크기(15×16)로 쓴다 */
+.preview-view__skin-icon {
+    flex-shrink: 0;
+    width: 15px;
+    height: 16px;
+    margin-right: var(--space-1);
+}
+.preview-view__skin-name {
+    flex-shrink: 1;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+}
+.preview-view__skin-arrow {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-left: var(--space-1);
+    background-image: var(--sei-icon-chevron-down);
+    background-size: 16px 16px;
+    -unity-background-image-tint-color: var(--git-text-secondary);
+}
+/* 미리보기 오른쪽 아래의 확대·축소 */
+.preview-view__zoom-tools {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    flex-direction: row;
+    align-items: center;
+    height: 28px;
+    padding: 0 var(--space-1);
+    border-width: 1px;
+    border-color: var(--git-button-border);
+    border-radius: var(--radius);
+    background-color: var(--git-header-bg);
+}
+.preview-view__zoom-tools .sei-icon-btn {
+    width: var(--ctl-h);
+    height: var(--ctl-h);
+    margin: 0;
+}
+.preview-view__zoom-sep {
+    width: 1px;
+    height: 14px;
+    margin: 0 var(--space-1);
+    background-color: var(--git-button-border);
+}
+.preview-view__zoom-out { background-image: var(--sei-icon-zoom-out); }
+.preview-view__zoom-in { background-image: var(--sei-icon-zoom-in); }
+.preview-view__zoom-reset { background-image: var(--sei-icon-zoom-reset); }
+.preview-view__zoom {
+    min-width: 42px;
+    margin: 0;
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+    -unity-text-align: middle-center;
+}

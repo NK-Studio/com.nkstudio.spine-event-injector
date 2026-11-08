@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement class="sei-section-header">
+        <ui:Label text="애니메이션" class="sei-section-header__title" />
+        <ui:Button name="skeleton" class="sei-btn animation-list__skeleton">
+            <ui:VisualElement name="skeleton-icon" class="animation-list__skeleton-icon" picking-mode="Ignore" />
+            <ui:Label name="skeleton-name" class="animation-list__skeleton-name" picking-mode="Ignore" />
+            <ui:VisualElement class="animation-list__skeleton-arrow" picking-mode="Ignore" />
+        </ui:Button>
+    </ui:VisualElement>
+    <ui:ListView name="list" class="animation-list__list" fixed-item-height="24" selection-type="Single" />
+</ui:UXML>

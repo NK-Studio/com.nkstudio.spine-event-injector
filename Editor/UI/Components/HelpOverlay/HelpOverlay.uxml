@@ -1,0 +1,40 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="card" class="help-overlay__card">
+        <ui:VisualElement class="help-overlay__header">
+            <ui:Label class="help-overlay__title" text="사용법" />
+            <ui:Button name="close" text="닫기" class="sei-btn" />
+        </ui:VisualElement>
+        <ui:ScrollView class="help-overlay__body">
+            <ui:Label class="help-overlay__head" text="열기" />
+            <ui:Label class="help-overlay__item" text="· Project 창에서 SkeletonDataAsset · .skel.bytes · .json 을 고르면 열립니다." />
+            <ui:Label class="help-overlay__item" text="· 프로젝트 밖 Spine 원본은 «외부 .spine 열기»." />
+            <ui:Label class="help-overlay__head" text="도프시트" />
+            <ui:Label class="help-overlay__item" text="· 이벤트 추가 버튼(도프시트 왼쪽 위): 재생 헤드에 빈 키 추가 → 오른쪽 속성에서 이벤트 선택" />
+            <ui:Label class="help-overlay__item" text="· 더블클릭: 키 추가 · 끌기: 옮기기(Alt: 프레임 사이) · Delete: 지우기" />
+            <ui:Label class="help-overlay__item" text="· 이벤트 정의: Shift/⌘ 클릭으로 여럿 고른 뒤 우클릭 또는 Delete 로 삭제" />
+            <ui:Label class="help-overlay__item" text="· 눈금자 클릭·끌기: 재생 헤드 이동 · Space: 재생 · ←/→: 한 프레임" />
+            <ui:Label class="help-overlay__item" text="· 재생 헤드는 가까운 키에 자석처럼 붙습니다(Alt: 붙지 않음)" />
+            <ui:Label class="help-overlay__item" text="· 도구 막대 가운데: 재생 헤드·키 끌기가 어디에 붙을지 고릅니다(Alt: 잠깐 자유) · , / .: 이전·다음 키" />
+            <ui:Label class="help-overlay__item" text="· Shift+휠: 좌우 이동 · ⌘/Ctrl+휠: 확대 · F: 전체 보기 · ⌘/Ctrl+Z: 되돌리기" />
+            <ui:Label class="help-overlay__item" text="· 속성 칸의 Int·Float·String 이름 더블클릭: 그 값만 정의 기본값으로" />
+            <ui:Label class="help-overlay__head" text="키 색" />
+            <ui:VisualElement class="help-overlay__legend">
+                <ui:VisualElement class="help-overlay__swatch help-overlay__swatch--dirty" />
+                <ui:Label class="help-overlay__item" text="아직 적용하지 않은 키(«적용하기»를 눌러야 파일에 들어감)" />
+            </ui:VisualElement>
+            <ui:VisualElement class="help-overlay__legend">
+                <ui:VisualElement class="help-overlay__swatch help-overlay__swatch--unsynced" />
+                <ui:Label class="help-overlay__item" text="원본(.spine)에 없는 키(원본을 연결했을 때만)" />
+            </ui:VisualElement>
+            <ui:Label class="help-overlay__head" text="미리보기" />
+            <ui:Label class="help-overlay__item" text="· 휠 또는 −/+ 버튼: 확대·축소 · 원래 크기 버튼: 처음 보기로" />
+            <ui:Label class="help-overlay__item" text="· 애니메이션 제목 옆 스켈레톤 목록: 스켈레톤이 여럿인 .spine 에서 고칠 스켈레톤 고르기" />
+            <ui:Label class="help-overlay__item" text="· 왼쪽 아래 스킨 목록: 미리보기에 입힐 스킨 고르기(파일은 바뀌지 않습니다)" />
+            <ui:Label class="help-overlay__head" text="저장" />
+            <ui:Label class="help-overlay__item" text="· «적용하기»를 눌러야 파일이 바뀝니다(쓰기 전 자동 백업)." />
+            <ui:Label class="help-overlay__item" text="· 원본을 «연결»하면 «원본에 반영»으로 .spine 에도 넣을 수 있습니다." />
+            <ui:Label class="help-overlay__head" text="Unity 이벤트" />
+            <ui:Label class="help-overlay__item" text="· 클립에 단 AnimationEvent 가 있으면 «Unity 이벤트 N개 가져오기»로 옮깁니다." />
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

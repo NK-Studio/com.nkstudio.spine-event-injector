@@ -1,0 +1,119 @@
+.event-dopesheet {
+    flex-grow: 1;
+    /* 머리글 + 줄 셋 + 스크롤 막대는 늘 보이게. 분할 뷰도 이 아래로는 줄이지 않는다 */
+    min-height: 150px;
+    /* 분할 뷰가 이 패널을 아래로 1px 더 내보내 그만큼 가려진다 */
+    padding-bottom: 1px;
+    background-color: var(--git-bg);
+}
+.event-dopesheet__header {
+    flex-direction: row;
+    flex-shrink: 0;
+    height: var(--sei-bar-h);
+    border-bottom-width: 1px;
+    border-color: var(--git-border);
+}
+.event-dopesheet__corner {
+    width: var(--sei-label-w);
+    min-width: var(--sei-label-w);
+    flex-direction: row;
+    align-items: center;
+    padding: 0 var(--space-2) 0 var(--space-4);
+    border-right-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-header-bg);
+}
+/* 현재 프레임은 고정 폭에 오른쪽 정렬: 재생 중 숫자 폭이 바뀌어도 뒤의 글자가 흔들리지 않는다 */
+.event-dopesheet__frame {
+    flex-shrink: 0;
+    width: 34px;
+    margin: 0 var(--space-1) 0 0;
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+    -unity-text-align: middle-right;
+}
+.event-dopesheet__time {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--git-text-secondary);
+    font-size: var(--font-small);
+}
+.event-dopesheet__ruler { flex-grow: 1; }
+
+.event-dopesheet__body { flex-grow: 1; }
+.event-dopesheet__rows { flex-grow: 1; }
+.event-dopesheet__outside {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    border-left-width: 2px;
+    border-color: var(--git-text-secondary);
+    background-color: var(--sei-out-of-range);
+}
+.event-dopesheet__playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--git-accent);
+}
+.event-dopesheet__empty {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 40px;
+    -unity-text-align: middle-center;
+    color: var(--git-text-muted);
+    font-size: var(--font-body);
+    display: none;
+}
+.event-dopesheet--empty .event-dopesheet__empty { display: flex; }
+
+
+/* ListView 기본 «List is empty» 는 쓰지 않는다(위 안내 문구를 쓴다) */
+.event-dopesheet__rows .unity-list-view__empty-label { display: none; }
+
+/* 자석: 재생 헤드가 이벤트 키에 붙어 있는 동안 굵고 밝게 */
+.event-dopesheet--snapped .event-dopesheet__playhead {
+    width: 3px;
+    margin-left: -1px;
+}
+
+/* 재생 헤드에 이벤트 키 추가(Unity 애니메이션 창의 Add Event 와 같은 아이콘) */
+.event-dopesheet__add-event {
+    flex-shrink: 0;
+    width: var(--sei-bar-ctl);
+    height: var(--sei-bar-ctl);
+    margin: 0;
+    background-image: var(--sei-icon-add-event);
+}
+
+/* 아래 막대: 트랙 폭 전체를 쓰는 가로 스크롤 */
+.event-dopesheet__footer {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+    height: 17px;
+    border-top-width: 1px;
+    border-color: var(--git-border);
+    background-color: var(--git-header-bg);
+}
+/* Unity 기본 스크롤 막대의 위쪽 테두리와 트랙 여백이 높이를 한쪽으로 치우치게 해서 없앤다 */
+.event-dopesheet__hscroll {
+    flex-grow: 1;
+    height: 12px;
+    min-height: 12px;
+    margin: 0 0 0 var(--sei-label-w);
+    border-width: 0;
+}
+.event-dopesheet__hscroll .unity-base-slider__tracker {
+    top: 0;
+    height: 100%;
+    margin: 0;
+}
+
+/* 도프시트 줄 전체 호버는 쓰지 않는다(범위 밖 어두운 칸을 덮는다). 호버는 왼쪽 이름 칸에만. */
+.sei-window .event-dopesheet__rows .unity-collection-view__item:hover { background-color: rgba(0, 0, 0, 0); }
