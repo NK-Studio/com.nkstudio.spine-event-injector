@@ -41,6 +41,14 @@ Spine 프로그램은 필요하지 않습니다.
 - `Editor/UI` — UI Toolkit(UXML·USS·C#)
 - `Editor/SpineVersionConverter` — Spine 버전 변환기의 코어(`.skel.bytes` 읽기·쓰기에 사용)
 
+## 연구 자료
+
+Unity가 임포트하지 않는 폴더에 포맷 연구 기록과 파이썬 PoC를 함께 둡니다.
+
+- `Documentation~` — `.spine` 포맷 메모, 연구 명세, 내보내기 규칙
+- `Tools~/poc` — `.spine` 이벤트 주입 파이썬 PoC
+- `Tools~/export_poc` — Spine 없이 JSON·`.skel`·아틀라스를 만드는 파이썬 PoC
+
 ## 라이선스
 
 MIT. 글꼴과 Material 아이콘의 라이선스는 `Editor/UI/Fonts`, `Editor/UI/Icons`의 NOTICE 파일을 따릅니다.
