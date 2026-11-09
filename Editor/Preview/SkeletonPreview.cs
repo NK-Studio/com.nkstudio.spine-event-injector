@@ -181,7 +181,7 @@ namespace NKStudio.SpineEventInjector
                 _animation = animation;
                 ApplySkin();
                 _skeleton.AnimationState.ClearTracks();
-                _skeleton.Skeleton.SetToSetupPose();
+                _skeleton.Skeleton.SetupPose();
                 _skeleton.AnimationState.SetAnimation(0, clip, true);
                 _bounds = MeasureBounds(animation);
             }
@@ -242,14 +242,14 @@ namespace NKStudio.SpineEventInjector
 
             // HideAndDontSave 로 만들어 열린 씬을 «바뀜»으로 만들지 않는다
             GameObject go = EditorUtility.CreateGameObjectWithHideFlags("Spine Event Injector Preview", HideFlags.HideAndDontSave,
-                typeof(MeshFilter), typeof(MeshRenderer), typeof(SkeletonAnimation));
+                typeof(MeshFilter), typeof(MeshRenderer), typeof(SkeletonRenderer), typeof(SkeletonAnimation));
             _skeleton = go.GetComponent<SkeletonAnimation>();
             _skeleton.skeletonDataAsset = Asset;
             _skeleton.Initialize(true);
             _util.AddSingleGO(go);
             _built = Asset;
             _animation = null;
-            return _skeleton.valid;
+            return _skeleton.IsValid;
         }
 
         /// <summary>
@@ -295,17 +295,17 @@ namespace NKStudio.SpineEventInjector
             if (wanted != skeleton.Skin)
             {
                 skeleton.SetSkin(wanted);
-                skeleton.SetSlotsToSetupPose();
+                skeleton.SetupPoseSlots();
             }
         }
 
         void Pose(float seconds)
         {
-            TrackEntry entry = _skeleton.AnimationState.GetCurrent(0);
+            TrackEntry entry = _skeleton.AnimationState.GetTrack(0);
             entry.TrackTime = seconds;
-            _skeleton.Skeleton.SetToSetupPose();
+            _skeleton.Skeleton.SetupPose();
             _skeleton.Update(0f);
-            _skeleton.LateUpdate();
+            _skeleton.Renderer.LateUpdate();
         }
 
         /// <summary>애니메이션 몇 군데의 메시 범위를 합쳐 카메라 틀을 잡는다(재생 중 화면이 흔들리지 않게).</summary>
