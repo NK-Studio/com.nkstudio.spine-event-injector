@@ -203,13 +203,80 @@ namespace NKStudio.SpineEventInjector
             atlas.hideFlags = HideFlags.DontSave;
             var data = new TextAsset(Encoding.UTF8.GetString(json)) { name = name + ".json", hideFlags = HideFlags.DontSave };
             SkeletonDataAsset asset = SkeletonDataAsset.CreateRuntimeInstance(data, atlas, true);
+
+            // 여기서 만든 객체는 DontSave 라 스스로 사라지지 않는다. 미리보기를 바꾸거나 닫을 때 Release 로 지운다.
+            var parts = new List<UnityEngine.Object> { atlasText, material, data };
+            parts.AddRange(textures);
+            if (atlas.materials != null)
+            {
+                parts.AddRange(atlas.materials.Where(m => m != null));
+            }
+
+            parts.Add(atlas);
             if (asset != null)
             {
                 asset.hideFlags = HideFlags.DontSave;
                 message = export.AtlasMessage; // 미리보기는 되지만 빠진 이미지가 있다
+                Owned[asset] = parts;
+            }
+            else
+            {
+                Destroy(parts);
             }
 
             return asset;
+        }
+
+        // 이 클래스가 만든 미리보기 에셋 → 함께 만든 객체들(텍스처·머티리얼·텍스트 에셋·아틀라스)
+        static readonly Dictionary<SkeletonDataAsset, List<UnityEngine.Object>> Owned = new Dictionary<SkeletonDataAsset, List<UnityEngine.Object>>();
+
+        static ExternalSpinePreview()
+        {
+            // 도메인이 다시 로드되면 이 표가 사라져 지울 길이 없어진다. 그 전에 모두 지운다.
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += ReleaseAll;
+        }
+
+        /// <summary>
+        /// 이 클래스가 만든 미리보기 에셋이면 텍스처까지 함께 지우고 true. 프로젝트의 에셋이면 건드리지 않는다.
+        /// 지우지 않으면 파일을 열거나 스켈레톤을 바꿀 때마다 텍스처와 스켈레톤 데이터가 쌓여, GC 가 도는 시간이 길어진다.
+        /// </summary>
+        public static bool IsOwned(SkeletonDataAsset asset) => ReferenceEquals(asset, null) == false && Owned.ContainsKey(asset);
+
+        public static bool Release(SkeletonDataAsset asset)
+        {
+            if (ReferenceEquals(asset, null) || Owned.TryGetValue(asset, out List<UnityEngine.Object> parts) == false)
+            {
+                return false;
+            }
+
+            Owned.Remove(asset);
+            Destroy(parts);
+            if (asset != null)
+            {
+                asset.Clear();
+                UnityEngine.Object.DestroyImmediate(asset);
+            }
+
+            return true;
+        }
+
+        public static void ReleaseAll()
+        {
+            foreach (SkeletonDataAsset asset in Owned.Keys.ToList())
+            {
+                Release(asset);
+            }
+        }
+
+        static void Destroy(List<UnityEngine.Object> parts)
+        {
+            foreach (UnityEngine.Object part in parts)
+            {
+                if (part != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(part);
+                }
+            }
         }
 
         static Texture2D CreateTexture(SpineExportPage page, byte[] flipped)

@@ -80,6 +80,11 @@ namespace NKStudio.SpineEventInjector
         {
             if (asset != Asset)
             {
+                if (asset == null)
+                {
+                    DestroySkeleton(); // 에셋을 지울 수 있게, 그 에셋으로 만든 미리보기 객체를 먼저 없앤다
+                }
+
                 Asset = asset;
                 _animation = null;
                 _skin = InitialSkin();

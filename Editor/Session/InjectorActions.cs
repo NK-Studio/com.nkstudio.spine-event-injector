@@ -102,9 +102,38 @@ namespace NKStudio.SpineEventInjector
             Clear();
         }
 
+        /// <summary>
+        /// 대상의 미리보기가 이 도구가 만든 것(.spine 에서 내보낸 것)이면 텍스처까지 지운다. 프로젝트 에셋이면 그대로 둔다.
+        /// </summary>
+        void ReleasePreview(EventSource source)
+        {
+            if (source == null || ReferenceEquals(source.Preview, null))
+            {
+                return;
+            }
+
+            Spine.Unity.SkeletonDataAsset asset = source.Preview;
+            if (ExternalSpinePreview.IsOwned(asset) == false)
+            {
+                return;
+            }
+
+            if (ReferenceEquals(_preview.Asset, asset))
+            {
+                _preview.SetAsset(null); // 이 에셋으로 만든 미리보기 객체를 먼저 없앤다
+            }
+
+            ExternalSpinePreview.Release(asset);
+            source.Preview = null;
+        }
+
+        /// <summary>창이 꺼질 때: 지금 대상의 미리보기 에셋을 지운다(다시 켜지면 새로 만든다).</summary>
+        public void ReleasePreview() => ReleasePreview(_session.Source);
+
         /// <summary>창을 처음 화면(아무것도 열지 않은 상태)으로 되돌린다. 묻지 않는다.</summary>
         void Clear()
         {
+            ReleasePreview(_session.Source);
             _session.Open(null);
             _unityEvents = new List<MecanimEventImporter.Found>();
             _preview.SetAsset(null);
@@ -342,6 +371,12 @@ namespace NKStudio.SpineEventInjector
                 _opened = null;
             }
 
+            EventSource old = _session.Source;
+            if (old != null && old != source)
+            {
+                ReleasePreview(old);
+            }
+
             RestoreSkeleton(source);
             _session.Open(source);
             Remember(source);
@@ -360,6 +395,7 @@ namespace NKStudio.SpineEventInjector
                 return;
             }
 
+            ReleasePreview(source);
             source.SelectSkeleton(name);
             SessionState.SetString(SkeletonKey, source.FilePath + "\n" + name);
             _session.Open(source);
@@ -445,6 +481,7 @@ namespace NKStudio.SpineEventInjector
             }
 
             source.SetProjectFps(export.Fps);
+            ReleasePreview(source);
             source.Preview = ExternalSpinePreview.CreateAsset(export, out string message);
             _preview.SetAsset(source.Preview);
             FillDurations(source);

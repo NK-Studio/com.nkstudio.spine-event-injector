@@ -170,6 +170,7 @@ namespace NKStudio.SpineEventInjector.UI
         void OnDisable()
         {
             _actions?.SaveWorkingState();
+            _actions?.ReleasePreview();
             Selection.selectionChanged -= OnProjectSelection;
             EventGuard.Imported -= OnImported;
             _preview?.Dispose();
