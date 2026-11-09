@@ -32,13 +32,7 @@ namespace NKStudio.SpineEventInjector.Skeleton
         {
             string version = SpineVersionInfo.ReadVersionString(file)
                 ?? throw new SpineFormatException(Loc.T("Spine 스켈레톤 데이터가 아니거나 버전을 읽을 수 없습니다"));
-            SpineVersion v = SpineVersionInfo.Parse(version);
-            if (v == SpineVersion.Version38)
-            {
-                throw new SpineEventUsageException(Loc.T("Spine {0} 데이터입니다. 4.2·4.3 익스포트만 지원합니다", version));
-            }
-
-            return v;
+            return SpineVersionInfo.Parse(version);
         }
 
         public EventSet Read(byte[] file) => Format == SpineFileFormat.Json ? ReadJson(file) : ReadBinary(file);
@@ -113,7 +107,12 @@ namespace NKStudio.SpineEventInjector.Skeleton
         {
             SpineVersion version = VersionOf(file);
             SpineSkeleton skeleton = SpineSkeletonConverter.Read(file, SpineFileFormat.Skel, version);
-            byte[] again = SpineSkeletonConverter.Write(skeleton, SpineFileFormat.Skel, version);
+
+            // 3.8 은 이벤트 구간만 바꿔 쓰고 나머지 바이트는 원본을 복사한다(변환기의 3.8 쓰기는 원본과 바이트가 달라진다)
+            Func<SpineSkeleton, byte[]> write = version == SpineVersion.Version38
+                ? (Func<SpineSkeleton, byte[]>)(s => Spine38BinaryEventPatcher.Write(file, s))
+                : s => SpineSkeletonConverter.Write(s, SpineFileFormat.Skel, version);
+            byte[] again = write(skeleton);
             if (again.AsSpan().SequenceEqual(file) == false)
             {
                 throw new SpineEventUsageException(Loc.T("이 .skel 파일은 변환기로 읽고 다시 썼을 때 원본과 같지 않아 고치지 않습니다"));
@@ -201,7 +200,7 @@ namespace NKStudio.SpineEventInjector.Skeleton
             }
 
             log?.Add(Loc.T("이벤트 정의 {0}개, 키 {1}개로 다시 썼습니다", edited.Definitions.Count, edited.Keys.Count));
-            return SpineSkeletonConverter.Write(skeleton, SpineFileFormat.Skel, version);
+            return write(skeleton);
         }
 
         // ------------------------------------------------------------ JSON

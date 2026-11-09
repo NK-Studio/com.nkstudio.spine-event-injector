@@ -22,7 +22,7 @@ Spine 프로그램은 필요하지 않습니다.
 
 | 대상 | 읽기·쓰기 | 미리보기 |
 | --- | --- | --- |
-| 프로젝트 안 SkeletonDataAsset · `.skel.bytes` · `.json` (Spine 4.2·4.3 익스포트) | 지원 | SkeletonDataAsset 으로 표시 |
+| 프로젝트 안 SkeletonDataAsset · `.skel.bytes` · `.json` (Spine 3.8·4.2·4.3 익스포트) | 지원 | SkeletonDataAsset 으로 표시(프로젝트의 spine-unity 런타임이 읽을 수 있는 버전일 때) |
 | 프로젝트 밖 `.spine` 원본 (Spine 3.8, 4.0 ~ 4.3 저장본, 베타 저장본 일부 포함) | 지원 | 프로젝트 옆 이미지 폴더가 있으면 표시 |
 
 스켈레톤이 여럿인 `.spine`은 «애니메이션» 제목 옆 목록에서 편집할 스켈레톤을 고릅니다.

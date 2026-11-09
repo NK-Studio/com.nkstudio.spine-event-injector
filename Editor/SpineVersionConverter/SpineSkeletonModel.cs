@@ -206,6 +206,9 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
         public float Time;
         public string Str1;
         public string Str2;
+
+        /// <summary>3.8 바이너리의 이벤트 키: 키가 자기 문자열을 따로 들고 있었는가(읽은 키만 값이 있다).</summary>
+        public bool? HasOwnString;
         public int Int1;
         public float Value1;
         public float Value2;
@@ -534,6 +537,9 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
         // 3.8 전용: 3.8 은 해시를 base64 문자열(보통 SHA-1 20바이트)로 쓴다. Hash 는 그 마지막 8바이트다.
         // 3.8 로 다시 쓸 때 원문을 보존하려고 들고 있다. 4.x 에서 읽었으면 null(3.8 로 쓸 때 Hash 로 만든다).
         public string HashString;
+
+        /// <summary>3.8 바이너리에서 읽었을 때 이벤트 관련 구간의 바이트 위치(<see cref="Spine38BinaryEventPatcher"/>가 쓴다).</summary>
+        public Spine38EventLayout Layout38;
         public string Version;
         public float X;
         public float Y;

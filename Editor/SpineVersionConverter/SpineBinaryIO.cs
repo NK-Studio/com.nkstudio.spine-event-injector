@@ -20,6 +20,9 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
 
         public int Remaining => _data.Length - _position;
 
+        /// <summary>다음에 읽을 바이트의 위치.</summary>
+        public int Position => _position;
+
         public void Skip(int count)
         {
             if (count > Remaining)

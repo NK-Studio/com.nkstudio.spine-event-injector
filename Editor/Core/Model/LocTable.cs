@@ -17,7 +17,6 @@ namespace NKStudio.SpineEventInjector
             ["Mecanim 클립에 사람이 단 AnimationEvent 를 이 스켈레톤의 Spine 이벤트로 옮깁니다(적용하기 전까지 파일은 그대로)"] = "Moves hand-made AnimationEvents on the Mecanim clips into this skeleton's Spine events (files stay unchanged until you Apply)",
             ["N 슬롯이 새 객체가 아닙니다"] = "N slot is not a new object",
             ["Project 창에서 Spine 스켈레톤(SkeletonDataAsset · .skel.bytes · .json)을 고르거나, 위의 «외부 .spine 열기»로 프로젝트 밖 Spine 원본을 여세요."] = "Select a Spine skeleton (SkeletonDataAsset · .skel.bytes · .json) in the Project window, or open a Spine source outside the project with «Open External .spine» above.",
-            ["Spine {0} 데이터입니다. 4.2·4.3 익스포트만 지원합니다"] = "This is Spine {0} data. Only 4.2 and 4.3 exports are supported",
             ["Spine {0} 프로젝트입니다. Spine 3.8 이후 프로젝트만 지원합니다"] = "This is a Spine {0} project. Only Spine 3.8 and later projects are supported",
             ["Spine 스켈레톤 데이터(SkeletonDataAsset · .skel.bytes · .json)나 .spine 이 아닙니다"] = "Not Spine skeleton data (SkeletonDataAsset · .skel.bytes · .json) or a .spine file",
             ["Spine 스켈레톤 데이터가 아니거나 버전을 읽을 수 없습니다"] = "Not Spine skeleton data, or its version cannot be read",

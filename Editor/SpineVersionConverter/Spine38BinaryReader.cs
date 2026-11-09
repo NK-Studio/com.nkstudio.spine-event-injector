@@ -47,10 +47,16 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
                 _skeleton.AudioPath = _input.ReadString();
             }
 
-            for (int i = 0, n = _input.ReadVarint(true); i < n; i++)
+            var layout = new Spine38EventLayout { StringsStart = _input.Position };
+            _skeleton.Layout38 = layout;
+            int stringCount = _input.ReadVarint(true);
+            layout.StringsBodyStart = _input.Position;
+            for (int i = 0; i < stringCount; i++)
             {
                 _skeleton.Strings.Add(_input.ReadRequiredString("문자열 테이블 항목"));
             }
+
+            layout.StringsEnd = _input.Position;
 
             ReadBones();
             ReadSlots();
@@ -64,11 +70,15 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
                 _skeleton.Skins.Add(ReadSkin(false));
             }
 
+            layout.EventsStart = _input.Position;
             ReadEvents();
+            layout.EventsEnd = _input.Position;
             for (int i = 0, n = _input.ReadVarint(true); i < n; i++)
             {
                 _skeleton.Animations.Add(ReadAnimation());
             }
+
+            layout.End = _input.Position;
 
             return _skeleton;
         }
@@ -716,6 +726,13 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
 
         private void ReadEventTimeline(SpineAnimation animation)
         {
+            int start = _input.Position;
+            ReadEventFrames(animation);
+            _skeleton.Layout38.AnimationEvents.Add((start, _input.Position));
+        }
+
+        private void ReadEventFrames(SpineAnimation animation)
+        {
             for (int i = 0, n = _input.ReadVarint(true); i < n; i++)
             {
                 var frame = new SpineTimelineFrame { Time = _input.ReadFloat() };
@@ -726,6 +743,7 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
 
                 // 3.8 은 "자기 문자열이 있는가" 플래그를 먼저 쓴다. 없으면 이벤트 기본 문자열.
                 bool hasFreeString = _input.ReadBoolean();
+                frame.HasOwnString = hasFreeString;
                 frame.Str2 = hasFreeString == true ? _input.ReadString() : spineEvent.StringValue;
                 if (string.IsNullOrEmpty(spineEvent.AudioPath) == false)
                 {
