@@ -105,6 +105,7 @@ namespace NKStudio.SpineEventInjector.UI
             toggle.labelElement.style.minWidth = 0;
             toggle.labelElement.style.flexGrow = 1;
             toggle.labelElement.style.marginLeft = 4;
+            toggle.labelElement.style.unityTextAlign = TextAnchor.MiddleLeft;
             toggle.RegisterValueChangedCallback(e =>
             {
                 _preview.SetSkinSelected(skin, e.newValue);

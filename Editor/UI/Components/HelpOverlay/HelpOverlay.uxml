@@ -29,7 +29,7 @@
             <ui:Label class="help-overlay__head" text="미리보기" />
             <ui:Label class="help-overlay__item" text="· 휠 또는 −/+ 버튼: 확대·축소 · 원래 크기 버튼: 처음 보기로" />
             <ui:Label class="help-overlay__item" text="· 애니메이션 제목 옆 스켈레톤 목록: 스켈레톤이 여럿인 .spine 에서 고칠 스켈레톤 고르기" />
-            <ui:Label class="help-overlay__item" text="· 왼쪽 아래 스킨 목록: 미리보기에 입힐 스킨 고르기(파일은 바뀌지 않습니다)" />
+            <ui:Label class="help-overlay__item" text="· 왼쪽 아래 스킨 목록: 미리보기에 입힐 스킨 고르기, 여러 개 함께 가능(파일은 바뀌지 않습니다)" />
             <ui:Label class="help-overlay__head" text="저장" />
             <ui:Label class="help-overlay__item" text="· «적용하기»를 눌러야 파일이 바뀝니다(쓰기 전 자동 백업)." />
             <ui:Label class="help-overlay__item" text="· 원본을 «연결»하면 «원본에 반영»으로 .spine 에도 넣을 수 있습니다." />

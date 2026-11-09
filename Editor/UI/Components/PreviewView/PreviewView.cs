@@ -199,7 +199,7 @@ namespace NKStudio.SpineEventInjector.UI
             ShowSkinLabel(choosable);
         }
 
-        /// <summary>버튼 글: 하나면 그 이름, 여럿이면 «첫 이름 +N». 툴팁에 전부.</summary>
+        /// <summary>버튼 글: 하나면 그 이름, 여럿이면 «스킨 N개»(긴 이름에 개수가 잘리지 않게). 툴팁에 전부.</summary>
         void ShowSkinLabel(bool choosable)
         {
             if (!choosable)
@@ -212,9 +212,9 @@ namespace NKStudio.SpineEventInjector.UI
             IReadOnlyList<string> skins = _preview.SelectedSkins;
             _skinName.text = skins.Count switch
             {
-                0 => "(스킨 없음)",
+                0 => Loc.T("(스킨 없음)"),
                 1 => skins[0],
-                _ => $"{skins[0]} +{skins.Count - 1}",
+                _ => Loc.T("스킨 {0}개", skins.Count),
             };
             _skin.tooltip = skins.Count > 1 ? string.Join("\n", skins) : string.Empty;
         }
