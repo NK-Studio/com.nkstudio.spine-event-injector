@@ -35,6 +35,9 @@ namespace NKStudio.SpineEventInjector
 
             /// <summary>텍스처에 그대로 올릴 페이지 픽셀(아래 줄부터). Pages 와 같은 순서.</summary>
             public List<byte[]> TexturePixels = new List<byte[]>();
+
+            /// <summary>TexturePixels 가 straight alpha 인가(Linear 색 공간). false 면 미리 곱한 알파(PMA).</summary>
+            public bool StraightAlpha;
             public float Fps = 30f;
             public readonly Dictionary<string, float> Durations = new Dictionary<string, float>();
         }
@@ -48,7 +51,8 @@ namespace NKStudio.SpineEventInjector
         {
             IReadOnlyList<SpineProjectSchema> schemas = SchemaLibrary.All;
             string runtime = RuntimeVersion(); // 에디터 API: 메인 스레드에서 구해 넘긴다
-            return Task.Run(() => Prepare(ExportNow(spinePath, spineVersion, skeleton, schemas, loaded), runtime));
+            bool straightAlpha = UseStraightAlpha();
+            return Task.Run(() => Prepare(ExportNow(spinePath, spineVersion, skeleton, schemas, loaded), runtime, straightAlpha));
         }
 
         // 스켈레톤을 바꿀 때마다 프로젝트 전체를 다시 내보내지 않도록 마지막 결과를 들고 있는다(스켈레톤이 여럿일 때만)
@@ -122,7 +126,7 @@ namespace NKStudio.SpineEventInjector
         /// 백그라운드 스레드: 에셋을 만들기 전에 할 수 있는 계산을 미리 한다(런타임 버전으로 JSON 변환, 텍스처용 픽셀 뒤집기).
         /// 이 계산을 메인 스레드에 두면 미리보기가 뜨기 직전에 에디터가 0.2~0.5초 멈춘다.
         /// </summary>
-        static Export Prepare(Export export, string runtime)
+        static Export Prepare(Export export, string runtime, bool straightAlpha)
         {
             if (export.Error != null || export.AtlasText == null || export.Pages.Count == 0)
             {
@@ -148,25 +152,96 @@ namespace NKStudio.SpineEventInjector
             }
 
             export.RuntimeJson = json;
+            export.StraightAlpha = straightAlpha;
             foreach (SpineExportPage page in export.Pages)
             {
-                export.TexturePixels.Add(Flip(page));
+                byte[] rgba = straightAlpha ? ToStraightAlpha(page.Rgba, page.Width, page.Height) : page.Rgba;
+                export.TexturePixels.Add(Flip(rgba, page.Width, page.Height));
             }
 
             return export;
         }
 
+        /// <summary>
+        /// Linear 색 공간이면 straight alpha 로 그린다. sRGB 텍스처를 linear 로 풀 때 미리 곱한 값까지 풀려 반투명 가장자리가
+        /// 어둡게 나오기 때문이다(spine-unity 도 Linear 에서 PMA 텍스처를 지원하지 않는다). 메인 스레드에서 부른다.
+        /// </summary>
+        static bool UseStraightAlpha() => QualitySettings.activeColorSpace == ColorSpace.Linear;
+
         /// <summary>RGBA(위에서 아래) → 텍스처 순서(아래에서 위).</summary>
-        static byte[] Flip(SpineExportPage page)
+        static byte[] Flip(byte[] rgba, int width, int height)
         {
-            var flipped = new byte[page.Rgba.Length];
-            int stride = page.Width * 4;
-            for (int y = 0; y < page.Height; y++)
+            var flipped = new byte[rgba.Length];
+            int stride = width * 4;
+            for (int y = 0; y < height; y++)
             {
-                Buffer.BlockCopy(page.Rgba, y * stride, flipped, (page.Height - 1 - y) * stride, stride);
+                Buffer.BlockCopy(rgba, y * stride, flipped, (height - 1 - y) * stride, stride);
             }
 
             return flipped;
+        }
+
+        /// <summary>
+        /// 미리 곱한 알파(PMA) → straight alpha. 셰이더가 다시 알파를 곱하므로 나눗셈 오차는 화면에서 1단계 안쪽이다.
+        /// 완전히 투명한 픽셀에는 이웃 색을 채운다(bleed). 그대로 검정이면 선형 필터가 가장자리에서 검정을 섞어 어두운 테두리가 생긴다.
+        /// </summary>
+        static byte[] ToStraightAlpha(byte[] pma, int width, int height)
+        {
+            var straight = new byte[pma.Length];
+            for (int i = 0; i < pma.Length; i += 4)
+            {
+                int a = pma[i + 3];
+                straight[i + 3] = (byte)a;
+                if (a == 0)
+                {
+                    continue;
+                }
+
+                for (int c = 0; c < 3; c++)
+                {
+                    straight[i + c] = (byte)Math.Min(255, (pma[i + c] * 255 + a / 2) / a);
+                }
+            }
+
+            // 투명한 픽셀만 고치고 이웃은 불투명한 것만 읽으므로 한 번에 돌려도 순서에 따라 결과가 바뀌지 않는다
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int i = (y * width + x) * 4;
+                    if (straight[i + 3] != 0)
+                    {
+                        continue;
+                    }
+
+                    int r = 0, g = 0, b = 0, n = 0;
+                    for (int ny = Math.Max(0, y - 1); ny <= Math.Min(height - 1, y + 1); ny++)
+                    {
+                        for (int nx = Math.Max(0, x - 1); nx <= Math.Min(width - 1, x + 1); nx++)
+                        {
+                            int j = (ny * width + nx) * 4;
+                            if (straight[j + 3] == 0)
+                            {
+                                continue;
+                            }
+
+                            r += straight[j];
+                            g += straight[j + 1];
+                            b += straight[j + 2];
+                            n++;
+                        }
+                    }
+
+                    if (n > 0)
+                    {
+                        straight[i] = (byte)(r / n);
+                        straight[i + 1] = (byte)(g / n);
+                        straight[i + 2] = (byte)(b / n);
+                    }
+                }
+            }
+
+            return straight;
         }
 
         /// <summary>내보낼 JSON 버전. 4.3 프로젝트는 4.3.26, 그 밖은 4.2.43 으로 쓴다.</summary>
@@ -185,7 +260,7 @@ namespace NKStudio.SpineEventInjector
 
             if (export.RuntimeJson == null && export.RuntimeJsonError == null)
             {
-                Prepare(export, RuntimeVersion()); // 백그라운드 준비를 거치지 않고 온 경우
+                Prepare(export, RuntimeVersion(), UseStraightAlpha()); // 백그라운드 준비를 거치지 않고 온 경우
             }
 
             if (export.RuntimeJson == null)
@@ -199,6 +274,7 @@ namespace NKStudio.SpineEventInjector
             var atlasText = new TextAsset(export.AtlasText) { name = name + ".atlas", hideFlags = HideFlags.DontSave };
             Texture2D[] textures = export.Pages.Select((page, i) => CreateTexture(page, export.TexturePixels[i])).ToArray();
             var material = new Material(Shader.Find("Spine/Skeleton")) { hideFlags = HideFlags.DontSave };
+            MaterialChecks.EnablePMATextureAtMaterial(material, export.StraightAlpha == false); // 페이지 머티리얼은 이것을 복사한다
             SpineAtlasAsset atlas = SpineAtlasAsset.CreateRuntimeInstance(atlasText, textures, material, true);
             atlas.hideFlags = HideFlags.DontSave;
             var data = new TextAsset(Encoding.UTF8.GetString(json)) { name = name + ".json", hideFlags = HideFlags.DontSave };
