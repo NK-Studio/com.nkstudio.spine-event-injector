@@ -138,8 +138,8 @@ namespace NKStudio.SpineEventInjector.Project
     public static class BigStack
     {
         // 기본 1MB 보다 넉넉하되 너무 크게 잡지 않는다: Windows 의 Mono 는 스택이 클수록 크게 느려진다
-        // (6MB 본문 읽기: 256MB 24초 · 64MB 2.7초 · 32MB 1.9초). 실제 프로젝트의 객체 중첩은 20단계 안팎이다.
-        const int StackSize = 32 * 1024 * 1024;
+        // (6MB 본문 읽기: 256MB 24초 · 64MB 2.7초 · 32MB 1.9초 · 16MB 1.3초). 실제 프로젝트의 객체 중첩은 20단계 안팎이다.
+        const int StackSize = 16 * 1024 * 1024;
 
         public static T Run<T>(Func<T> work)
         {

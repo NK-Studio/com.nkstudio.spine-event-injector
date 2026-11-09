@@ -11,6 +11,67 @@ namespace NKStudio.SpineEventInjector.Export
     {
         static readonly byte[] Signature = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
+        /// <summary>
+        /// PNG 파일 → RGBA. 그림에 필요한 청크(IHDR·PLTE·tRNS·IDAT)만 읽고 나머지는 건너뛴다.
+        /// 포토샵이 넣은 메타데이터(iTXt 등)가 수 MB 인 파일이 흔해서, 파일을 통째로 읽으면 그 바이트를 읽는 데 시간이 다 간다.
+        /// </summary>
+        public static byte[] DecodeFile(string path, out int width, out int height)
+        {
+            using (var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096))
+            using (var needed = new MemoryStream())
+            {
+                var head = new byte[8];
+                if (file.Read(head, 0, 8) != 8 || StartsWithSignature(head) == false)
+                {
+                    throw new SpineFormatException(Loc.T("PNG가 아닙니다: {0}", path));
+                }
+
+                needed.Write(head, 0, 8);
+                while (file.Read(head, 0, 8) == 8)
+                {
+                    int length = ReadInt(head, 0);
+                    if (length < 0 || file.Position + length + 4 > file.Length)
+                    {
+                        throw new SpineFormatException(Loc.T("{0}: PNG 데이터가 잘렸습니다", path));
+                    }
+
+                    bool end = head[4] == 'I' && head[5] == 'E' && head[6] == 'N' && head[7] == 'D';
+                    bool keep = end ||
+                                (head[4] == 'I' && head[5] == 'H' && head[6] == 'D' && head[7] == 'R') ||
+                                (head[4] == 'P' && head[5] == 'L' && head[6] == 'T' && head[7] == 'E') ||
+                                (head[4] == 't' && head[5] == 'R' && head[6] == 'N' && head[7] == 'S') ||
+                                (head[4] == 'I' && head[5] == 'D' && head[6] == 'A' && head[7] == 'T');
+                    if (keep == false)
+                    {
+                        file.Seek(length + 4L, SeekOrigin.Current);
+                        continue;
+                    }
+
+                    var body = new byte[length + 4]; // 본문 + CRC(Decode 는 CRC 를 보지 않는다)
+                    int got = 0;
+                    while (got < body.Length)
+                    {
+                        int n = file.Read(body, got, body.Length - got);
+                        if (n <= 0)
+                        {
+                            throw new SpineFormatException(Loc.T("{0}: PNG 데이터가 잘렸습니다", path));
+                        }
+
+                        got += n;
+                    }
+
+                    needed.Write(head, 0, 8);
+                    needed.Write(body, 0, body.Length);
+                    if (end)
+                    {
+                        break;
+                    }
+                }
+
+                return Decode(needed.ToArray(), out width, out height, path);
+            }
+        }
+
         /// <summary>PNG 파일 내용 → 위쪽 줄부터의 RGBA(픽셀당 4바이트, straight).</summary>
         public static byte[] Decode(byte[] data, out int width, out int height, string nameForMessage)
         {

@@ -77,7 +77,7 @@ namespace NKStudio.SpineEventInjector.Project
         /// <summary>그래프를 본문 바이트로. 객체는 처음 만나는 슬롯에서 본문째 쓰고(표지 1), 그 뒤로는 번호 + 2.</summary>
         public static byte[] Serialize(SpineProjectDocument doc)
         {
-            var output = new MemoryStream();
+            var output = new MemoryStream(doc.Top.End > 0 ? doc.Top.End + 1024 : 4096);
             var ids = new Dictionary<string, Dictionary<Node, int>>
             {
                 ["A"] = new Dictionary<Node, int>(ReferenceComparer.Instance),
@@ -93,7 +93,7 @@ namespace NKStudio.SpineEventInjector.Project
             {
                 if (part.IsSlot == false)
                 {
-                    output.Write(part.Raw, 0, part.Raw.Length);
+                    part.WriteTo(output);
                     continue;
                 }
 
@@ -101,7 +101,7 @@ namespace NKStudio.SpineEventInjector.Project
                 Node obj = s.Obj;
                 if (s.Prefix.HasValue)
                 {
-                    Write(output, Varint(s.Prefix.Value));
+                    PutVarint(output, s.Prefix.Value);
                 }
 
                 if (obj.Table == "none")
@@ -120,7 +120,7 @@ namespace NKStudio.SpineEventInjector.Project
                 Dictionary<Node, int> seen = ids[obj.Table];
                 if (seen.TryGetValue(obj, out int id))
                 {
-                    Write(output, Varint(id + 2));
+                    PutVarint(output, id + 2);
                     continue;
                 }
 
@@ -131,6 +131,24 @@ namespace NKStudio.SpineEventInjector.Project
         }
 
         static void Write(Stream s, byte[] b) => s.Write(b, 0, b.Length);
+
+        /// <summary><see cref="Varint"/>와 같은 바이트를 배열 없이 바로 쓴다.</summary>
+        static void PutVarint(Stream s, long v)
+        {
+            ulong u = (ulong)v;
+            while (true)
+            {
+                byte x = (byte)(u & 0x7F);
+                u >>= 7;
+                if (u == 0)
+                {
+                    s.WriteByte(x);
+                    return;
+                }
+
+                s.WriteByte((byte)(x | 0x80));
+            }
+        }
 
         sealed class ReferenceComparer : IEqualityComparer<Node>
         {
@@ -161,7 +179,7 @@ namespace NKStudio.SpineEventInjector.Project
                 }
                 else
                 {
-                    if (part.IsSlot || part.Raw.Length != part.End - part.Start)
+                    if (part.IsSlot || part.Length != part.End - part.Start)
                     {
                         throw new SpineFormatException(Loc.T("{0} 본문의 [0x{1:x}, 0x{2:x})를 고칠 수 없습니다", node.Cls, p0, p1));
                     }
@@ -247,7 +265,7 @@ namespace NKStudio.SpineEventInjector.Project
             memo = memo ?? new Dictionary<Node, Node>(ReferenceComparer.Instance);
             var copy = new Node(node.Cls, null, node.Start, node.Table)
             {
-                F = new Dictionary<string, FieldValue>(node.F),
+                F = new FieldMap(node.F),
                 Items = new List<ListItem>(node.Items),
                 SizeAt = node.SizeAt,
                 End = node.End,

@@ -20,6 +20,7 @@ namespace NKStudio.SpineEventInjector.Project
         readonly SpineProjectSchema _schema;
         readonly Dictionary<string, int> _cnum = new Dictionary<string, int>();
         readonly Stack<Node> _stack = new Stack<Node>();
+        readonly StringBuilder _text = new StringBuilder(64);
         int? _tlType;
         int _klPrev;
 
@@ -29,8 +30,8 @@ namespace NKStudio.SpineEventInjector.Project
             ["B"] = new List<string>(),
         };
 
-        public readonly Dictionary<(string, int), Node> ById = new Dictionary<(string, int), Node>();
-        public readonly List<Node> Nodes = new List<Node>();
+        public readonly Dictionary<(string, int), Node> ById;
+        public readonly List<Node> Nodes;
         public int RefCount { get; private set; }
         public readonly Node Top;
         public readonly string Version;
@@ -51,6 +52,11 @@ namespace NKStudio.SpineEventInjector.Project
         {
             _b = body;
             _schema = schema;
+
+            // 객체 수는 본문 크기에 비례한다(표본에서 20~30바이트에 하나). 미리 잡아 두어 커질 때마다 다시 옮기지 않게 한다.
+            int expected = Math.Max(64, body.Length / 24);
+            ById = new Dictionary<(string, int), Node>(expected);
+            Nodes = new List<Node>(expected);
             foreach (KeyValuePair<string, string> kv in schema.Names.OrderBy(kv => int.Parse(kv.Key)))
             {
                 if (_cnum.ContainsKey(kv.Value) == false)
@@ -76,7 +82,7 @@ namespace NKStudio.SpineEventInjector.Project
 
                 if (schema.RootPad > 0)
                 {
-                    Take(schema.RootPad); // 4.3.07~: 16바이트 값(프로젝트 ID로 보임)
+                    Skip(schema.RootPad); // 4.3.07~: 16바이트 값(프로젝트 ID로 보임)
                 }
 
                 TypedSlot("Project"); // 루트는 클래스 없이 표지부터 쓰는 Project
@@ -200,7 +206,8 @@ namespace NKStudio.SpineEventInjector.Project
             byte b0 = TakeByte();
             if ((b0 & 0x80) == 0)
             {
-                var ascii = new StringBuilder();
+                StringBuilder ascii = _text;
+                ascii.Clear();
                 ascii.Append((char)b0);
                 while (true)
                 {
@@ -234,7 +241,8 @@ namespace NKStudio.SpineEventInjector.Project
                 return null;
             }
 
-            var chars = new StringBuilder();
+            StringBuilder chars = _text;
+            chars.Clear();
             for (int i = 0; i < n - 1; i++)
             {
                 int c = TakeByte();
@@ -255,9 +263,31 @@ namespace NKStudio.SpineEventInjector.Project
 
         float Float()
         {
-            byte[] v = Take(4);
-            return BitConverter.ToSingle(BitConverter.IsLittleEndian ? new[] { v[3], v[2], v[1], v[0] } : v, 0);
+            if (_p + 4 > _b.Length)
+            {
+                Fail(Loc.T("본문이 끝났습니다"));
+            }
+
+            int bits = (_b[_p] << 24) | (_b[_p + 1] << 16) | (_b[_p + 2] << 8) | _b[_p + 3];
+            _p += 4;
+            return BitConverter.Int32BitsToSingle(bits);
         }
+
+        /// <summary>값을 쓰지 않는 구간을 건너뛴다(바이트는 조각으로 따로 기록된다).</summary>
+        void Skip(int n)
+        {
+            if (_p + n > _b.Length)
+            {
+                Fail(Loc.T("본문이 끝났습니다"));
+            }
+
+            _p += n;
+        }
+
+        // 태그·클래스 번호를 문자열 키로 바꿀 때마다 문자열을 새로 만들지 않도록 작은 수는 미리 만들어 둔다
+        static readonly string[] SmallNumbers = Enumerable.Range(0, 512).Select(i => i.ToString()).ToArray();
+
+        static string Text(long n) => n >= 0 && n < SmallNumbers.Length ? SmallNumbers[n] : n.ToString();
 
         // ------------------------------------------------------------ 그래프 기록
 
@@ -265,7 +295,7 @@ namespace NKStudio.SpineEventInjector.Project
         {
             if (_p > node.Last)
             {
-                node.Parts.Add(Part.OfRaw(node.Last, _p, Slice(node.Last, _p)));
+                node.Parts.Add(Part.OfSpan(node.Last, _p, _b, node.Last, _p - node.Last));
             }
 
             node.Last = _p;
@@ -276,7 +306,7 @@ namespace NKStudio.SpineEventInjector.Project
             Node parent = _stack.Peek();
             if (s0 > parent.Last)
             {
-                parent.Parts.Add(Part.OfRaw(parent.Last, s0, Slice(parent.Last, s0)));
+                parent.Parts.Add(Part.OfSpan(parent.Last, s0, _b, parent.Last, s0 - parent.Last));
             }
 
             parent.Parts.Add(Part.OfSlot(s0, _p, new Slot(prefix, obj)));
@@ -370,7 +400,7 @@ namespace NKStudio.SpineEventInjector.Project
                 return null;
             }
 
-            if (_schema.Names.TryGetValue(c.ToString(), out string cls) == false)
+            if (_schema.Names.TryGetValue(Text(c), out string cls) == false)
             {
                 Fail(Loc.T("모르는 클래스 번호 {0}", c), at);
             }
@@ -469,7 +499,7 @@ namespace NKStudio.SpineEventInjector.Project
                 int typeAt = _p;
                 int type = (int)Varint();
                 node.F["type"] = new FieldValue(typeAt, null, (long)type);
-                if (_schema.Timelines.TryGetValue(type.ToString(), out TimelineLayout lay) == false)
+                if (_schema.Timelines.TryGetValue(Text(type), out TimelineLayout lay) == false)
                 {
                     Fail(Loc.T("모르는 타임라인 종류 {0}", type));
                 }
@@ -490,7 +520,7 @@ namespace NKStudio.SpineEventInjector.Project
             }
             else if (kind == "keyframe")
             {
-                if (_tlType == null || _schema.Timelines.TryGetValue(_tlType.Value.ToString(), out TimelineLayout lay) == false)
+                if (_tlType == null || _schema.Timelines.TryGetValue(Text(_tlType.Value), out TimelineLayout lay) == false)
                 {
                     Fail(Loc.T("타임라인 밖의 키"));
                     return null;
@@ -506,19 +536,19 @@ namespace NKStudio.SpineEventInjector.Project
                 if (_schema.CurveCondition != null)
                 {
                     // 핸들 블록(들어오는·나가는 핸들): 이 키나 앞 키가 베지어(1)일 때만
-                    Take(lay.Vals);
+                    Skip(lay.Vals);
                     Field(node, "flag", "V");
                     long flag = (long)node.F["flag"].Value;
                     if (flag == 1 || (_klPrev == 1 && _schema.CurveCondition != "own"))
                     {
-                        Take(20 * lay.Curves);
+                        Skip(20 * lay.Curves);
                     }
 
                     _klPrev = (int)flag;
                 }
                 else
                 {
-                    Take(lay.Vals + 20 * lay.Curves);
+                    Skip(lay.Vals + 20 * lay.Curves);
                     Field(node, "flag", "V");
                 }
 
@@ -560,7 +590,7 @@ namespace NKStudio.SpineEventInjector.Project
             }
             else if (kind.StartsWith("fixed"))
             {
-                Take(int.Parse(kind.Substring(5)));
+                Skip(int.Parse(kind.Substring(5)));
             }
             else if (kind == "rfarray" || kind == "rvarray" || kind == "rsarray" || kind == "farray")
             {
@@ -579,7 +609,7 @@ namespace NKStudio.SpineEventInjector.Project
                 }
                 else
                 {
-                    Take((int)(n * (kind == "rsarray" ? 2 : 4)));
+                    Skip((int)(n * (kind == "rsarray" ? 2 : 4)));
                 }
             }
             else if (kind == "kstrarray")
@@ -605,7 +635,7 @@ namespace NKStudio.SpineEventInjector.Project
                 {
                     if (Varint() != 0)
                     {
-                        Take(4);
+                        Skip(4);
                     }
                 }
             }
@@ -618,7 +648,7 @@ namespace NKStudio.SpineEventInjector.Project
                     // 묶음 머리는 varint 가 아니라 1바이트다(0x80 도 나온다)
                     if (TakeByte() != 0 || kind == "defvtx")
                     {
-                        Take((int)(4 * Math.Min(128, total - 128 * i)));
+                        Skip((int)(4 * Math.Min(128, total - 128 * i)));
                     }
                 }
             }
@@ -639,6 +669,7 @@ namespace NKStudio.SpineEventInjector.Project
             // 묶음 방식(4.3 정식 첨부): 묶음 순서대로 나오고 묶음 안 순서는 빌드마다 다르다.
             // 적힌 필드 수는 실제보다 작으므로 쓰지 않고, 묶음마다 모든 필드를 읽으면 다음 묶음으로 간다.
             Varint();
+            _schema.Fields.TryGetValue(cls, out Dictionary<string, string> fields);
             List<HashSet<int>> need = groups.Select(g => new HashSet<int>(g)).ToList();
             int total = need.Sum(g => g.Count);
             int gi = 0;
@@ -651,13 +682,13 @@ namespace NKStudio.SpineEventInjector.Project
 
                 int tat = _p;
                 int tag = (int)Varint();
-                string key = gi == 0 ? tag.ToString() : $"{gi}:{tag}";
+                string key = gi == 0 ? Text(tag) : $"{gi}:{tag}";
                 if (need[gi].Remove(tag) == false)
                 {
                     Fail(Loc.T("모르는 필드 {0}.{1}", cls, key), tat);
                 }
 
-                ReadField(node, cls, key, tat);
+                ReadField(node, cls, fields, key, tat);
             }
         }
 
@@ -666,6 +697,8 @@ namespace NKStudio.SpineEventInjector.Project
             int tail = _schema.Tail.TryGetValue(cls, out int t) ? t : 0;
             long n0 = Varint();
             long n = n0 + tail;
+            _schema.Fields.TryGetValue(cls, out Dictionary<string, string> fields);
+            node.F = new FieldMap((int)Math.Min(n, 64));
             int last = -1;
             int level = 0;
             for (long i = 0; i < n; i++)
@@ -682,26 +715,25 @@ namespace NKStudio.SpineEventInjector.Project
                     }
 
                     last = tag;
-                    key = level == 0 ? tag.ToString() : $"{level}:{tag}";
+                    key = level == 0 ? Text(tag) : $"{level}:{tag}";
                 }
                 else
                 {
                     // 4.2: 개수 뒤 꼬리 필드는 t<태그>, 같은 태그가 다시 나오면 d<태그>
-                    key = i < n0 ? tag.ToString() : $"t{tag}";
+                    key = i < n0 ? Text(tag) : $"t{tag}";
                     while (node.F.ContainsKey(key))
                     {
                         key = "d" + key;
                     }
                 }
 
-                ReadField(node, cls, key, tat);
+                ReadField(node, cls, fields, key, tat);
             }
         }
 
-        void ReadField(Node node, string cls, string key, int tat)
+        void ReadField(Node node, string cls, Dictionary<string, string> fields, string key, int tat)
         {
-            if (_schema.Fields.TryGetValue(cls, out Dictionary<string, string> fields) == false ||
-                fields.TryGetValue(key, out string ty) == false)
+            if (fields == null || fields.TryGetValue(key, out string ty) == false)
             {
                 Fail(Loc.T("모르는 필드 {0}.{1}", cls, key), tat);
                 return;
@@ -756,7 +788,7 @@ namespace NKStudio.SpineEventInjector.Project
                     // 본문 없는 새 객체(클래스 + 표지 1)
                     int at = _p;
                     long c = Varint();
-                    _schema.Names.TryGetValue(c.ToString(), out string cls2);
+                    _schema.Names.TryGetValue(Text(c), out string cls2);
                     if (Varint() != 1)
                     {
                         Fail(Loc.T("N 슬롯이 새 객체가 아닙니다"), at);

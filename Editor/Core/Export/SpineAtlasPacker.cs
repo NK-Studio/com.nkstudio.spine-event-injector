@@ -103,7 +103,7 @@ namespace NKStudio.SpineEventInjector.Export
                     continue;
                 }
 
-                byte[] rgba = SpinePngCodec.Decode(File.ReadAllBytes(path), out int w, out int h, path);
+                byte[] rgba = SpinePngCodec.DecodeFile(path, out int w, out int h);
                 regions.Add(BuildRegion(regionName, w, h, rgba, mesh.Contains(regionName) == false));
             }
 

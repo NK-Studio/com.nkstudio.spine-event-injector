@@ -28,6 +28,13 @@ namespace NKStudio.SpineEventInjector
             public string AtlasMessage;
             public List<SpineExportPage> Pages = new List<SpineExportPage>();
             public string Error;
+
+            /// <summary>런타임 버전에 맞춘 JSON(백그라운드에서 미리 바꿔 둔다). 바꾸지 못했으면 null 이고 이유는 RuntimeJsonError.</summary>
+            public byte[] RuntimeJson;
+            public string RuntimeJsonError;
+
+            /// <summary>텍스처에 그대로 올릴 페이지 픽셀(아래 줄부터). Pages 와 같은 순서.</summary>
+            public List<byte[]> TexturePixels = new List<byte[]>();
             public float Fps = 30f;
             public readonly Dictionary<string, float> Durations = new Dictionary<string, float>();
         }
@@ -40,7 +47,8 @@ namespace NKStudio.SpineEventInjector
         public static Task<Export> ExportAsync(string spinePath, string spineVersion, string skeleton, SpineProjectFile loaded = null)
         {
             IReadOnlyList<SpineProjectSchema> schemas = SchemaLibrary.All;
-            return Task.Run(() => ExportNow(spinePath, spineVersion, skeleton, schemas, loaded));
+            string runtime = RuntimeVersion(); // 에디터 API: 메인 스레드에서 구해 넘긴다
+            return Task.Run(() => Prepare(ExportNow(spinePath, spineVersion, skeleton, schemas, loaded), runtime));
         }
 
         // 스켈레톤을 바꿀 때마다 프로젝트 전체를 다시 내보내지 않도록 마지막 결과를 들고 있는다(스켈레톤이 여럿일 때만)
@@ -110,6 +118,57 @@ namespace NKStudio.SpineEventInjector
             return result;
         }
 
+        /// <summary>
+        /// 백그라운드 스레드: 에셋을 만들기 전에 할 수 있는 계산을 미리 한다(런타임 버전으로 JSON 변환, 텍스처용 픽셀 뒤집기).
+        /// 이 계산을 메인 스레드에 두면 미리보기가 뜨기 직전에 에디터가 0.2~0.5초 멈춘다.
+        /// </summary>
+        static Export Prepare(Export export, string runtime)
+        {
+            if (export.Error != null || export.AtlasText == null || export.Pages.Count == 0)
+            {
+                return export;
+            }
+
+            byte[] json = Encoding.UTF8.GetBytes(export.Json);
+            string exported = SpineVersionInfo.ReadVersionString(json);
+            if (exported != null && runtime != null && exported.StartsWith(runtime) == false)
+            {
+                try
+                {
+                    byte[] source = json;
+                    json = SpineSkeletonConverter.Convert(json, new SpineConversionOptions { TargetVersion = runtime + (runtime == "4.2" ? ".43" : ".26") }).Output;
+                    json = KeepUnmappedTransformMixesOff(source, json);
+                    json = LinkedMeshTimelinesAsBool(json);
+                }
+                catch (Exception e)
+                {
+                    export.RuntimeJsonError = Loc.T("미리보기용으로 {0} → {1} 변환을 하지 못했습니다: {2}", exported, runtime, e.Message);
+                    return export;
+                }
+            }
+
+            export.RuntimeJson = json;
+            foreach (SpineExportPage page in export.Pages)
+            {
+                export.TexturePixels.Add(Flip(page));
+            }
+
+            return export;
+        }
+
+        /// <summary>RGBA(위에서 아래) → 텍스처 순서(아래에서 위).</summary>
+        static byte[] Flip(SpineExportPage page)
+        {
+            var flipped = new byte[page.Rgba.Length];
+            int stride = page.Width * 4;
+            for (int y = 0; y < page.Height; y++)
+            {
+                Buffer.BlockCopy(page.Rgba, y * stride, flipped, (page.Height - 1 - y) * stride, stride);
+            }
+
+            return flipped;
+        }
+
         /// <summary>내보낼 JSON 버전. 4.3 프로젝트는 4.3.26, 그 밖은 4.2.43 으로 쓴다.</summary>
         static string TargetVersion(string fileVersion) =>
             fileVersion != null && fileVersion.StartsWith("4.3") ? "4.3.26" : "4.2.43";
@@ -124,28 +183,21 @@ namespace NKStudio.SpineEventInjector
                 return null;
             }
 
-            byte[] json = Encoding.UTF8.GetBytes(export.Json);
-            string runtime = RuntimeVersion();
-            string exported = SpineVersionInfo.ReadVersionString(json);
-            if (exported != null && runtime != null && exported.StartsWith(runtime) == false)
+            if (export.RuntimeJson == null && export.RuntimeJsonError == null)
             {
-                try
-                {
-                    byte[] source = json;
-                    json = SpineSkeletonConverter.Convert(json, new SpineConversionOptions { TargetVersion = runtime + (runtime == "4.2" ? ".43" : ".26") }).Output;
-                    json = KeepUnmappedTransformMixesOff(source, json);
-                    json = LinkedMeshTimelinesAsBool(json);
-                }
-                catch (Exception e)
-                {
-                    message = Loc.T("미리보기용으로 {0} → {1} 변환을 하지 못했습니다: {2}", exported, runtime, e.Message);
-                    return null;
-                }
+                Prepare(export, RuntimeVersion()); // 백그라운드 준비를 거치지 않고 온 경우
             }
 
+            if (export.RuntimeJson == null)
+            {
+                message = export.RuntimeJsonError;
+                return null;
+            }
+
+            byte[] json = export.RuntimeJson;
             string name = export.Name;
             var atlasText = new TextAsset(export.AtlasText) { name = name + ".atlas", hideFlags = HideFlags.DontSave };
-            Texture2D[] textures = export.Pages.Select(CreateTexture).ToArray();
+            Texture2D[] textures = export.Pages.Select((page, i) => CreateTexture(page, export.TexturePixels[i])).ToArray();
             var material = new Material(Shader.Find("Spine/Skeleton")) { hideFlags = HideFlags.DontSave };
             SpineAtlasAsset atlas = SpineAtlasAsset.CreateRuntimeInstance(atlasText, textures, material, true);
             atlas.hideFlags = HideFlags.DontSave;
@@ -160,16 +212,8 @@ namespace NKStudio.SpineEventInjector
             return asset;
         }
 
-        /// <summary>RGBA(위에서 아래) → Texture2D(아래에서 위).</summary>
-        static Texture2D CreateTexture(SpineExportPage page)
+        static Texture2D CreateTexture(SpineExportPage page, byte[] flipped)
         {
-            var flipped = new byte[page.Rgba.Length];
-            int stride = page.Width * 4;
-            for (int y = 0; y < page.Height; y++)
-            {
-                Buffer.BlockCopy(page.Rgba, y * stride, flipped, (page.Height - 1 - y) * stride, stride);
-            }
-
             var texture = new Texture2D(page.Width, page.Height, TextureFormat.RGBA32, false)
             {
                 name = Path.GetFileNameWithoutExtension(page.Name),
