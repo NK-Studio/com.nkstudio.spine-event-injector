@@ -196,7 +196,27 @@ namespace NKStudio.SpineEventInjector.UI
                 this.Q("skin-icon").style.backgroundImage = new StyleBackground(Spine.Unity.Editor.SpineEditorUtilities.Icons.skin);
             }
 
-            _skinName.text = choosable ? _preview.SkinName ?? string.Empty : string.Empty;
+            ShowSkinLabel(choosable);
+        }
+
+        /// <summary>버튼 글: 하나면 그 이름, 여럿이면 «첫 이름 +N». 툴팁에 전부.</summary>
+        void ShowSkinLabel(bool choosable)
+        {
+            if (!choosable)
+            {
+                _skinName.text = string.Empty;
+                _skin.tooltip = string.Empty;
+                return;
+            }
+
+            IReadOnlyList<string> skins = _preview.SelectedSkins;
+            _skinName.text = skins.Count switch
+            {
+                0 => "(스킨 없음)",
+                1 => skins[0],
+                _ => $"{skins[0]} +{skins.Count - 1}",
+            };
+            _skin.tooltip = skins.Count > 1 ? string.Join("\n", skins) : string.Empty;
         }
 
         void OpenSkinMenu()
@@ -206,19 +226,11 @@ namespace NKStudio.SpineEventInjector.UI
                 return;
             }
 
-            var menu = new GenericMenu();
-            foreach (string name in _preview.SkinNames)
+            UnityEditor.PopupWindow.Show(_skin.worldBound, new SkinPickerPopup(_preview, _skin.worldBound.width, () =>
             {
-                string picked = name;
-                menu.AddItem(new GUIContent(picked), picked == _preview.SkinName, () =>
-                {
-                    _preview.SkinName = picked;
-                    _skinName.text = picked;
-                    _dirty = true;
-                });
-            }
-
-            menu.DropDown(_skin.worldBound);
+                ShowSkinLabel(true);
+                _dirty = true;
+            }));
         }
 
         void SetZoom(float zoom)

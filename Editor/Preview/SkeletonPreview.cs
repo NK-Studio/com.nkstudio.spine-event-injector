@@ -32,7 +32,7 @@ namespace NKStudio.SpineEventInjector
         Color _checkerA = Color.gray;
         Color _checkerB = Color.gray;
 
-        string _skin;
+        readonly List<string> _skins = new List<string>();
 
         public SkeletonDataAsset Asset { get; private set; }
 
@@ -54,17 +54,27 @@ namespace NKStudio.SpineEventInjector
             }
         }
 
-        /// <summary>미리보기에 입힐 스킨. 바꾸면 다음 그리기 때 화면 틀까지 다시 잡는다.</summary>
-        public string SkinName
+        /// <summary>미리보기에 함께 입힐 스킨들(켠 순서). 겹치는 슬롯은 나중에 켠 스킨이 이긴다.</summary>
+        public IReadOnlyList<string> SelectedSkins => _skins;
+
+        public bool IsSkinSelected(string name) => _skins.Contains(name);
+
+        /// <summary>스킨을 켜거나 끈다. 바뀌면 다음 그리기 때 화면 틀까지 다시 잡는다.</summary>
+        public void SetSkinSelected(string name, bool on)
         {
-            get => _skin;
-            set
+            bool changed = on ? !_skins.Contains(name) : _skins.Contains(name);
+            if (changed)
             {
-                if (value != _skin)
+                if (on)
                 {
-                    _skin = value;
-                    _animation = null;
+                    _skins.Add(name);
                 }
+                else
+                {
+                    _skins.Remove(name);
+                }
+
+                _animation = null;
             }
         }
 
@@ -87,7 +97,12 @@ namespace NKStudio.SpineEventInjector
 
                 Asset = asset;
                 _animation = null;
-                _skin = InitialSkin();
+                _skins.Clear();
+                string initial = InitialSkin();
+                if (initial != null)
+                {
+                    _skins.Add(initial);
+                }
             }
         }
 
@@ -296,9 +311,29 @@ namespace NKStudio.SpineEventInjector
         void ApplySkin()
         {
             Spine.Skeleton skeleton = _skeleton.Skeleton;
-            Skin wanted = _skin != null ? skeleton.Data.FindSkin(_skin) : null;
+            Skin wanted = null;
+            if (_skins.Count == 1)
+            {
+                wanted = skeleton.Data.FindSkin(_skins[0]);
+            }
+            else if (_skins.Count > 1)
+            {
+                // 고른 스킨들을 켠 순서대로 합친다(겹치는 슬롯은 나중 것이 이김)
+                wanted = new Skin("preview-combined");
+                foreach (string name in _skins)
+                {
+                    Skin part = skeleton.Data.FindSkin(name);
+                    if (part != null)
+                    {
+                        wanted.AddSkin(part);
+                    }
+                }
+            }
+
             if (wanted != skeleton.Skin)
             {
+                // SetSkin 은 이전 스킨이 있을 때 «붙어 있던 것만» 바꾸므로, 슬롯을 먼저 비워 새 스킨의 기본 첨부가 붙게 한다
+                skeleton.SetSkin((Skin)null);
                 skeleton.SetSkin(wanted);
                 skeleton.SetupPoseSlots();
             }
