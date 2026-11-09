@@ -24,9 +24,37 @@ namespace NKStudio.SpineEventInjector.Project
         /// <summary>스켈레톤이 여럿인 프로젝트에서 읽고 쓸 스켈레톤. 없거나 모르는 이름이면 이름순 첫 번째.</summary>
         public string Skeleton;
 
+        // 마지막으로 읽은 파일(같은 바이트 배열이면 다시 읽지 않는다). 쓰기는 그래프를 고치므로 이 캐시를 쓰지 않는다.
+        byte[] _readBytes;
+        SpineProjectFile _readProject;
+
+        /// <summary>
+        /// 읽기 전용으로 연 프로젝트(<see cref="Read(byte[])"/>가 마지막으로 읽은 것). 미리보기 내보내기가 다시 읽지 않도록 넘긴다.
+        /// 고치지 말 것.
+        /// </summary>
+        public SpineProjectFile ReadProject => _readProject;
+
+        /// <summary>새로 읽은 그래프(고쳐도 된다).</summary>
         public SpineProjectFile Load(byte[] file)
         {
             SpineProjectFile project = SpineProjectFile.Load(file, _schemas);
+            return Scope(project);
+        }
+
+        /// <summary>읽기 전용 그래프. 같은 바이트면 지난번 것을 쓴다(스켈레톤을 바꿀 때 6MB 본문을 다시 읽지 않게).</summary>
+        SpineProjectFile LoadForRead(byte[] file)
+        {
+            if (ReferenceEquals(file, _readBytes) == false)
+            {
+                _readProject = SpineProjectFile.Load(file, _schemas);
+                _readBytes = file;
+            }
+
+            return Scope(_readProject);
+        }
+
+        SpineProjectFile Scope(SpineProjectFile project)
+        {
             List<string> names = SkeletonNames(project);
             if (names.Count > 1)
             {
@@ -45,7 +73,7 @@ namespace NKStudio.SpineEventInjector.Project
         public static List<string> SkeletonNames(SpineProjectFile project) =>
             project.Doc.Of("Skeleton").Select(s => (string)s.Value("1")).Where(n => n != null).OrderBy(n => n, StringComparer.Ordinal).ToList();
 
-        public EventSet Read(byte[] file) => Read(Load(file));
+        public EventSet Read(byte[] file) => Read(LoadForRead(file));
 
         public EventSet Read(SpineProjectFile project)
         {

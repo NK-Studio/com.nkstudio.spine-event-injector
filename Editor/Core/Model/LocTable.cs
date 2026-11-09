@@ -18,7 +18,7 @@ namespace NKStudio.SpineEventInjector
             ["N 슬롯이 새 객체가 아닙니다"] = "N slot is not a new object",
             ["Project 창에서 Spine 스켈레톤(SkeletonDataAsset · .skel.bytes · .json)을 고르거나, 위의 «외부 .spine 열기»로 프로젝트 밖 Spine 원본을 여세요."] = "Select a Spine skeleton (SkeletonDataAsset · .skel.bytes · .json) in the Project window, or open a Spine source outside the project with «Open External .spine» above.",
             ["Spine {0} 데이터입니다. 4.2·4.3 익스포트만 지원합니다"] = "This is Spine {0} data. Only 4.2 and 4.3 exports are supported",
-            ["Spine {0} 프로젝트입니다. Spine 4.0 이후 프로젝트만 지원합니다(3.x 미지원)"] = "This is a Spine {0} project. Only Spine 4.0+ projects are supported (3.x is not)",
+            ["Spine {0} 프로젝트입니다. Spine 3.8 이후 프로젝트만 지원합니다"] = "This is a Spine {0} project. Only Spine 3.8 and later projects are supported",
             ["Spine 스켈레톤 데이터(SkeletonDataAsset · .skel.bytes · .json)나 .spine 이 아닙니다"] = "Not Spine skeleton data (SkeletonDataAsset · .skel.bytes · .json) or a .spine file",
             ["Spine 스켈레톤 데이터가 아니거나 버전을 읽을 수 없습니다"] = "Not Spine skeleton data, or its version cannot be read",
             ["Spine 원본에 쓰기"] = "Write to Spine source",
@@ -52,6 +52,8 @@ namespace NKStudio.SpineEventInjector
             ["{0}: Spine 스켈레톤 데이터(.skel.bytes · .json)가 아닙니다"] = "{0}: not Spine skeleton data (.skel.bytes · .json)",
             ["{0}: 다시 쓰기가 원본과 다름"] = "{0}: rewriting does not match the original",
             ["{0}: 정의 {1}개 · 키 {2}개를 읽었습니다"] = "{0}: read {1} definitions · {2} keys",
+            ["{0} 여는 중…"] = "Opening {0}…",
+            ["열지 못했습니다"] = "Could not open the file",
             ["{0}가 다시 임포트되면서 이 도구로 넣었던 이벤트 키 {1}개"] = "When {0} was re-imported, {1} event keys added by this tool",
             ["{0}가 다시 임포트되어 새로 읽었습니다"] = "{0} was re-imported and has been reloaded",
             ["{0}는 리스트가 아닙니다"] = "{0} is not a list",
@@ -265,7 +267,7 @@ namespace NKStudio.SpineEventInjector
             ["{0}: PNG 팔레트 범위를 벗어났습니다"] = "{0}: PNG palette index out of range",
             ["묶을 이미지가 없습니다"] = "There are no images to pack",
             ["이미지 폴더가 없습니다: {0}"] = "Image folder not found: {0}",
-            ["이미지 폴더 {0}에 없는 이미지: {1}"] = "Images missing from {0}: {1}",
+            ["이미지 폴더 {0}에 없는 이미지는 그리지 않습니다: {1}"] = "Images missing from {0} are not drawn: {1}",
             ["{0}픽셀 페이지에 들어가지 않는 이미지가 있습니다: {1}"] = "An image does not fit on a {0}-pixel page: {1}",
         };
     }

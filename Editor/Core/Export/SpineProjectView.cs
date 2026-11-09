@@ -38,6 +38,9 @@ namespace NKStudio.SpineEventInjector.Export
 
         public bool NewStyleTimelines => Doc.Schema.Kinds.Values.Contains("timeline");
 
+        /// <summary>3.8 프로젝트: 키가 태그 필드 클래스(Key38)이고 곡선이 키마다 정규화된 값 하나다.</summary>
+        public bool Keys38 => Doc.Schema.Kinds.ContainsKey("Key38");
+
         public string KindOf(Node node) => Doc.Schema.Kinds.TryGetValue(node.Cls, out string kind) ? kind : null;
 
         public object Deref(object value) => value is NodeRef r ? Doc.ById[(r.Table, r.Id)] : value;

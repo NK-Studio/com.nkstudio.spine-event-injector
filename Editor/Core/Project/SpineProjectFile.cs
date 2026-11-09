@@ -25,9 +25,11 @@ namespace NKStudio.SpineEventInjector.Project
         {
             byte[] body = SpineProjectContainer.Decompress(file, out byte[] trailer);
             string version = SpineProjectDocument.ReadVersion(body);
-            if (version != null && int.TryParse(version.Split('.')[0], out int major) && major >= 1 && major <= 3)
+            // 3.x 이하는 스키마가 맡은 버전(3.8)만 연다. 그 밖의 옛 버전은 구조가 달라 안내하고 거부한다.
+            if (version != null && int.TryParse(version.Split('.')[0], out int major) && major >= 1 && major <= 3 &&
+                schemas.Any(s => s.Formats.Contains(version)) == false)
             {
-                throw new SpineEventUsageException(Loc.T("Spine {0} 프로젝트입니다. Spine 4.0 이후 프로젝트만 지원합니다(3.x 미지원)", version));
+                throw new SpineEventUsageException(Loc.T("Spine {0} 프로젝트입니다. Spine 3.8 이후 프로젝트만 지원합니다", version));
             }
 
             List<SpineProjectSchema> candidates = schemas
@@ -69,6 +71,24 @@ namespace NKStudio.SpineEventInjector.Project
         /// </summary>
         public static SpineProjectFile LoadForExport(byte[] file, IReadOnlyList<SpineProjectSchema> schemas)
         {
+            // 이 결과는 다시 쓰지 않으므로, 맞는 스키마가 하나뿐이면 «다시 쓰기 = 원본» 확인(본문을 한 번 더 쓰는 비용)을 건너뛴다.
+            // 여럿이면 그 확인이 스키마를 고르는 기준이라 Load 를 그대로 쓴다.
+            byte[] head = SpineProjectContainer.Decompress(file, out byte[] headTrailer);
+            string headVersion = SpineProjectDocument.ReadVersion(head);
+            List<SpineProjectSchema> only = schemas.Where(s => s.Formats.Contains(headVersion)).Take(2).ToList();
+            if (only.Count == 1)
+            {
+                try
+                {
+                    SpineProjectDocument doc = BigStack.Run(() => new SpineProjectDocument(head, only[0], true));
+                    return new SpineProjectFile { Body = head, Trailer = headTrailer, Schema = only[0], Doc = doc };
+                }
+                catch (SpineFormatException)
+                {
+                    // 아래 기존 경로가 같은 오류를 알린다
+                }
+            }
+
             try
             {
                 return Load(file, schemas);
@@ -117,7 +137,9 @@ namespace NKStudio.SpineEventInjector.Project
     /// <summary>깊은 재귀를 견디는 큰 스택 스레드에서 실행한다(예외는 그대로 다시 던진다).</summary>
     public static class BigStack
     {
-        const int StackSize = 256 * 1024 * 1024;
+        // 기본 1MB 보다 넉넉하되 너무 크게 잡지 않는다: Windows 의 Mono 는 스택이 클수록 크게 느려진다
+        // (6MB 본문 읽기: 256MB 24초 · 64MB 2.7초 · 32MB 1.9초). 실제 프로젝트의 객체 중첩은 20단계 안팎이다.
+        const int StackSize = 32 * 1024 * 1024;
 
         public static T Run<T>(Func<T> work)
         {

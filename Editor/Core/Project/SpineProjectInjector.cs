@@ -12,7 +12,7 @@ namespace NKStudio.SpineEventInjector.Project
     /// </summary>
     public sealed class SpineProjectInjector
     {
-        static readonly string[] TimelineDeep = { "Timeline", "List", "KeyList", "Keyframe", "Event" };
+        static readonly string[] TimelineDeep = { "Timeline", "List", "KeyList", "Keyframe", "Key38", "Event" }; // Key38: 3.8 키
 
         readonly SpineProjectDocument _doc;
         SpineProjectDocument _template;

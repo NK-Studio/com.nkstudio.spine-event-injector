@@ -26,6 +26,14 @@ namespace NKStudio.SpineEventInjector.Export
         public List<SpineExportPage> Pages = new List<SpineExportPage>();
         /// <summary>atlas 가 없는 이유(이미지 폴더 없음 등). atlas 가 있으면 null.</summary>
         public string AtlasMessage;
+
+        /// <summary>Json·atlas 를 아직 만들지 않았으면 false(<see cref="SpineProjectExporter.Complete"/>로 만든다).</summary>
+        public bool Ready { get; internal set; }
+
+        internal Func<SkeletonModel> ReadModel;
+        internal string TargetVersion;
+        internal string SpinePath;
+        internal string ImagesDirOverride;
     }
 
     /// <summary>
@@ -36,35 +44,72 @@ namespace NKStudio.SpineEventInjector.Export
     /// </summary>
     public static class SpineProjectExporter
     {
-        public static List<SpineExportResult> Export(SpineProjectFile file, string spinePath, string targetVersion, string imagesDirOverride = null)
+        /// <summary>
+        /// lazy: true 면 스켈레톤 이름만 채워 돌려주고, 모델·JSON·atlas 는 <see cref="Complete"/>를 부를 때 만든다
+        /// (스켈레톤이 여럿인 프로젝트에서 미리보기는 하나만 쓴다).
+        /// </summary>
+        public static List<SpineExportResult> Export(SpineProjectFile file, string spinePath, string targetVersion, string imagesDirOverride = null,
+            bool lazy = false)
         {
             CheckVersion(targetVersion);
-            List<SkeletonModel> models;
             var results = new List<SpineExportResult>();
             try
             {
-                models = SkeletonModelReader.ReadAll(new ProjectView(file));
-                foreach (SkeletonModel model in models)
+                foreach ((string name, Func<SkeletonModel> read) in SkeletonModelReader.Readers(new ProjectView(file)))
                 {
                     results.Add(new SpineExportResult
                     {
-                        SkeletonName = model.Name,
-                        Json = SkeletonJsonWriter.Write(model, targetVersion, true),
+                        SkeletonName = name,
+                        ReadModel = read,
+                        TargetVersion = targetVersion,
+                        SpinePath = spinePath,
+                        ImagesDirOverride = imagesDirOverride,
                     });
                 }
             }
             catch (Exception e) when (IsBrokenGraph(e))
             {
-                throw new SpineFormatException(Loc.T("프로젝트 구조를 해석하지 못했습니다: {0}", e.Message));
+                throw BrokenGraph(e);
             }
 
-            for (int i = 0; i < models.Count; i++)
+            if (lazy == false)
             {
-                FillAtlas(results[i], models[i], spinePath, imagesDirOverride);
+                foreach (SpineExportResult result in results)
+                {
+                    Complete(result);
+                }
             }
 
             return results;
         }
+
+        /// <summary>모델을 읽어 Json·atlas 를 채운다(이미 채웠으면 아무것도 하지 않는다). 같은 결과를 여러 스레드가 부르면 호출하는 쪽에서 잠근다.</summary>
+        public static void Complete(SpineExportResult result)
+        {
+            if (result.Ready)
+            {
+                return;
+            }
+
+            SkeletonModel model;
+            try
+            {
+                model = result.ReadModel();
+                result.SkeletonName = model.Name;
+                result.Json = SkeletonJsonWriter.Write(model, result.TargetVersion, true);
+            }
+            catch (Exception e) when (IsBrokenGraph(e))
+            {
+                throw BrokenGraph(e);
+            }
+
+            FillAtlas(result, model, result.SpinePath, result.ImagesDirOverride);
+            result.ReadModel = null;
+            result.Ready = true;
+        }
+
+        static SpineFormatException BrokenGraph(Exception e) =>
+            new SpineFormatException(Loc.T("프로젝트 구조를 해석하지 못했습니다: {0}", e.Message));
 
         static void CheckVersion(string version)
         {

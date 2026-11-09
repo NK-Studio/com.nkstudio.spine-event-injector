@@ -949,6 +949,16 @@ namespace NKStudio.SpineEventInjector.Export
                     }
 
                     return o;
+                case "point":
+                    Put(o, "x", a.X, 0);
+                    Put(o, "y", a.Y, 0);
+                    Put(o, "rotation", a.Rotation, 0);
+                    if (_nonessential && a.Color != "f1f100ff")
+                    {
+                        o["color"] = a.Color;
+                    }
+
+                    return o;
                 default:
                     throw new ArgumentException(t);
             }

@@ -182,7 +182,7 @@ namespace NKStudio.SpineEventInjector.UI
             _sourceBar.AssetCleared += _actions.Close;
             _sourceBar.AssetRejected += message => _session.Report(message, StatusKind.Warning);
             _sourceBar.OpenSpineClicked += _actions.BrowseSpine;
-            _sourceBar.RecentPicked += _actions.OpenPath;
+            _sourceBar.RecentPicked += path => _actions.OpenPath(path);
             _sourceBar.ImportUnityClicked += _actions.ImportUnityEvents;
             _animations.Selected += _session.SetAnimation;
             _animations.SkeletonSelected += _actions.SelectSkeleton;

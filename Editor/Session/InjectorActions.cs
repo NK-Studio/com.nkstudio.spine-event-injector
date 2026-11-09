@@ -24,6 +24,9 @@ namespace NKStudio.SpineEventInjector
         readonly SkeletonPreview _preview;
         Task<ExternalSpinePreview.Export> _exporting;
         EventSource _exportFor;
+        Task<EventSource> _opening;
+        string _openingPath;
+        Action _opened;
 
         /// <summary>미리보기 렌더러의 대상이 바뀌었다(준비 완료 또는 없음). 인자: 화면에 띄울 안내(없으면 null).</summary>
         public event Action<string> PreviewChanged;
@@ -96,6 +99,12 @@ namespace NKStudio.SpineEventInjector
                 return;
             }
 
+            Clear();
+        }
+
+        /// <summary>창을 처음 화면(아무것도 열지 않은 상태)으로 되돌린다. 묻지 않는다.</summary>
+        void Clear()
+        {
             _session.Open(null);
             _unityEvents = new List<MecanimEventImporter.Found>();
             _preview.SetAsset(null);
@@ -105,12 +114,87 @@ namespace NKStudio.SpineEventInjector
             _session.Report(string.Empty);
         }
 
-        public void OpenPath(string fullPath)
+        /// <summary>
+        /// 파일을 연다. .spine 은 본문이 커서(수 MB) 백그라운드에서 읽고, 다 읽으면 창에 띄운다(그동안 에디터가 멈추지 않는다).
+        /// opened: 열기에 성공한 뒤 부른다.
+        /// </summary>
+        public void OpenPath(string fullPath, Action opened = null)
         {
-            if (Open(() => EventSourceLoader.FromPath(fullPath)) && EventSourceLoader.IsSpineProjectPath(fullPath))
+            if (EventSourceLoader.IsSpineProjectPath(fullPath) == false)
             {
-                SourceLinkStore.AddRecent(fullPath);
+                if (Open(() => EventSourceLoader.FromPath(fullPath)))
+                {
+                    opened?.Invoke();
+                }
+
+                return;
             }
+
+            if (ConfirmLeave() == false)
+            {
+                return;
+            }
+
+            // 에디터 API 가 필요한 값은 여기(메인 스레드)서 구해 넘긴다
+            IReadOnlyList<SpineProjectSchema> schemas = SchemaLibrary.All;
+            string assetPath = EventSourceLoader.ToAssetPath(fullPath);
+            // 읽기 전에 지금 미리보기를 먼저 내린다(새 파일을 읽는 동안 이전 스켈레톤이 보이지 않게).
+            // 이전 대상의 미리보기 내보내기가 돌고 있으면 그 결과도 버린다.
+            EditorApplication.update -= PollExport;
+            _exporting = null;
+            _exportFor = null;
+            _preview.SetAsset(null);
+
+            _openingPath = fullPath;
+            _opened = opened;
+            _opening = Task.Run(() => EventSourceLoader.FromSpineProject(fullPath, assetPath, schemas));
+            _session.Report(Loc.T("{0} 여는 중…", Path.GetFileName(fullPath)));
+            PreviewChanged?.Invoke(null);
+            EditorApplication.update -= PollOpen;
+            EditorApplication.update += PollOpen;
+        }
+
+        /// <summary>.spine 을 백그라운드에서 여는 중인가.</summary>
+        public bool OpenBusy => _opening != null;
+
+        void PollOpen()
+        {
+            if (_opening == null)
+            {
+                EditorApplication.update -= PollOpen;
+                return;
+            }
+
+            if (_opening.IsCompleted == false)
+            {
+                return;
+            }
+
+            EditorApplication.update -= PollOpen;
+            Task<EventSource> task = _opening;
+            string path = _openingPath;
+            Action opened = _opened;
+            _opening = null;
+            _openingPath = null;
+            _opened = null;
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                // 열기 전에 이미 지금 대상을 떠나기로 했으므로 처음 화면으로 돌아간다
+                Clear();
+                _session.Report(task.Exception?.GetBaseException().Message ?? Loc.T("열지 못했습니다"), StatusKind.Error);
+                return;
+            }
+
+            if (ConfirmLeave() == false) // 읽는 동안 지금 대상을 고쳤을 수 있다
+            {
+                _session.Report(string.Empty);
+                RestorePreview();
+                return;
+            }
+
+            Show(task.Result);
+            SourceLinkStore.AddRecent(path);
+            opened?.Invoke();
         }
 
         public void BrowseSpine()
@@ -142,7 +226,8 @@ namespace NKStudio.SpineEventInjector
             }
             else if (File.Exists(last))
             {
-                OpenPath(last);
+                OpenPath(last, RestoreWorkingState); // .spine 은 다 읽은 뒤에 되살린다
+                return;
             }
 
             RestoreWorkingState();
@@ -228,13 +313,41 @@ namespace NKStudio.SpineEventInjector
                 return false;
             }
 
+            Show(source);
+            return true;
+        }
+
+        /// <summary>새 파일로 바꾸는 것을 취소해 지금 대상이 그대로면, 열기 전에 내린 미리보기를 다시 띄운다.</summary>
+        void RestorePreview()
+        {
+            if (_session.Source != null)
+            {
+                PreparePreview(_session.Source);
+            }
+            else
+            {
+                PreviewChanged?.Invoke(null);
+            }
+        }
+
+        /// <summary>읽은 대상을 창에 띄운다.</summary>
+        void Show(EventSource source)
+        {
+            // 백그라운드로 여는 중이던 것은 버린다(그사이 다른 것을 열었다)
+            if (_opening != null)
+            {
+                EditorApplication.update -= PollOpen;
+                _opening = null;
+                _openingPath = null;
+                _opened = null;
+            }
+
             RestoreSkeleton(source);
             _session.Open(source);
             Remember(source);
             _unityEvents = MecanimEventImporter.Scan(source.Preview);
             PreparePreview(source);
             _session.Report(Loc.T("{0}: 정의 {1}개 · 키 {2}개를 읽었습니다", source.DisplayName, source.Working.Definitions.Count, source.Working.Keys.Count));
-            return true;
         }
 
         /// <summary>고칠 스켈레톤을 바꾼다(적용하지 않은 변경이 있으면 먼저 묻는다).</summary>
@@ -293,14 +406,15 @@ namespace NKStudio.SpineEventInjector
             }
 
             _exportFor = source;
-            _exporting = ExternalSpinePreview.ExportAsync(source.FilePath, source.Version, source.Skeleton);
+            _exporting = ExternalSpinePreview.ExportAsync(source.FilePath, source.Version, source.Skeleton,
+                (source.Codec as SpineProjectCodec)?.ReadProject); // 열 때 읽은 그래프를 그대로 쓴다
             PreviewChanged?.Invoke(null);
             EditorApplication.update -= PollExport;
             EditorApplication.update += PollExport;
         }
 
         /// <summary>지금 열린 대상의 미리보기를 내보내는 중인가.</summary>
-        public bool PreviewBusy => _exporting != null && _exportFor == _session.Source;
+        public bool PreviewBusy => OpenBusy || (_exporting != null && _exportFor == _session.Source);
 
         void PollExport()
         {
@@ -336,6 +450,10 @@ namespace NKStudio.SpineEventInjector
             FillDurations(source);
             _session.NotifySourceInfoChanged();
             PreviewChanged?.Invoke(_preview.HasData ? null : message ?? Loc.T("미리보기를 만들지 못했습니다"));
+            if (_preview.HasData && message != null)
+            {
+                _session.Report(message, StatusKind.Warning);
+            }
         }
 
         void FillDurations(EventSource source)

@@ -88,14 +88,7 @@ namespace NKStudio.SpineEventInjector
             };
             if (IsSpineProjectPath(fullPath))
             {
-                var codec = new SpineProjectCodec(SchemaLibrary.All);
-                SpineProjectFile project = codec.Load(bytes);
-                source.Kind = EventSourceKind.SpineProject;
-                source.Codec = codec;
-                source.Version = project.FormatVersion;
-                List<string> skeletons = SpineProjectCodec.SkeletonNames(project);
-                source.Skeletons = skeletons.Count > 1 ? skeletons : (IReadOnlyList<string>)Array.Empty<string>();
-                source.Original = codec.Read(project);
+                FillSpineProject(source, SchemaLibrary.All);
             }
             else
             {
@@ -111,6 +104,40 @@ namespace NKStudio.SpineEventInjector
         }
 
         /// <summary>프로젝트 안 경로면 Assets/… 에셋 경로, 아니면 null.</summary>
+        /// <summary>
+        /// .spine 을 연다. 파일만 다루므로 백그라운드 스레드에서 불러도 된다(스키마 목록과 에셋 경로는 메인 스레드에서 구해 넘긴다).
+        /// </summary>
+        public static EventSource FromSpineProject(string fullPath, string assetPath, IReadOnlyList<SpineProjectSchema> schemas)
+        {
+            if (File.Exists(fullPath) == false)
+            {
+                throw new SpineEventUsageException(Loc.T("파일이 없습니다: {0}", fullPath));
+            }
+
+            var source = new EventSource
+            {
+                FilePath = fullPath,
+                DisplayName = Path.GetFileName(fullPath),
+                Bytes = File.ReadAllBytes(fullPath),
+                AssetPath = assetPath,
+            };
+            FillSpineProject(source, schemas);
+            source.Working = source.Original.Clone();
+            return source;
+        }
+
+        static void FillSpineProject(EventSource source, IReadOnlyList<SpineProjectSchema> schemas)
+        {
+            var codec = new SpineProjectCodec(schemas);
+            source.Kind = EventSourceKind.SpineProject;
+            source.Codec = codec;
+            source.Original = codec.Read(source.Bytes);
+            SpineProjectFile project = codec.ReadProject;
+            source.Version = project.FormatVersion;
+            List<string> skeletons = SpineProjectCodec.SkeletonNames(project);
+            source.Skeletons = skeletons.Count > 1 ? skeletons : (IReadOnlyList<string>)Array.Empty<string>();
+        }
+
         public static string ToAssetPath(string fullPath)
         {
             string root = PluginPaths.ProjectRoot.Replace('\\', '/').TrimEnd('/') + "/";

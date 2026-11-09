@@ -608,8 +608,6 @@ def load(path):
     for _ in range(3):
         Document.varint(head)
     version = Document.kstring(head)
-    if version and version.split('.')[0].isdigit() and 1 <= int(version.split('.')[0]) <= 3:
-        raise UsageError(f'Spine {version} 프로젝트입니다. 이 도구는 Spine 4.0 이후 프로젝트만 지원합니다(3.x 미지원)')
     # 스키마 고르기: 파일마다 담당 포맷 목록(formats, 없으면 파일 이름)을 두고, 해당하는 스키마를 실제로 읽어
     # «끝까지 읽힘 + 다시 쓰기 = 원본»인 첫 스키마를 쓴다. 같은 포맷 문자열이라도 구조가 다른 경우가 있다
     # (예: 4.3.75-beta와 4.3.00 정식이 모두 "4.3.00").
@@ -620,6 +618,8 @@ def load(path):
         s.setdefault('formats', [name])
         schemas.append((name, s))
     cands = sorted((x for x in schemas if version in x[1]['formats']), key=lambda x: x[0] != version)
+    if not cands and version and version.split('.')[0].isdigit() and 1 <= int(version.split('.')[0]) <= 3:
+        raise UsageError(f'Spine {version} 프로젝트입니다. 이 도구는 Spine 3.8 이후 프로젝트만 지원합니다')
     if not cands:
         have = ', '.join(sorted({f for _, s in schemas for f in s['formats']}))
         raise FormatError(f'지원하지 않는 프로젝트 포맷 버전 {version!r} (지원: {have})')

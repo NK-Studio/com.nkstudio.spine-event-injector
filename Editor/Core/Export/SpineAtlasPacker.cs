@@ -74,7 +74,10 @@ namespace NKStudio.SpineEventInjector.Export
             public List<Region> Regions;
         }
 
-        /// <summary>결과의 AtlasText·Pages 를 채운다. 이미지가 없거나 읽을 수 없으면 예외.</summary>
+        /// <summary>
+        /// 결과의 AtlasText·Pages 를 채운다. 이미지를 읽을 수 없으면 예외.
+        /// 폴더에 없는 이미지는 Spine 에디터처럼 그리지 않는다(투명한 1픽셀 영역으로 두어 런타임이 첨부를 찾게 한다). 그 목록은 AtlasMessage 에 남긴다.
+        /// </summary>
         public static void Pack(SkeletonModel model, string imagesDir, string name, SpineExportResult result)
         {
             HashSet<string> mesh = RegionNames(model, out List<string> names);
@@ -96,16 +99,12 @@ namespace NKStudio.SpineEventInjector.Export
                 if (File.Exists(path) == false)
                 {
                     missing.Add(regionName);
+                    regions.Add(BuildRegion(regionName, 1, 1, new byte[4], false));
                     continue;
                 }
 
                 byte[] rgba = SpinePngCodec.Decode(File.ReadAllBytes(path), out int w, out int h, path);
                 regions.Add(BuildRegion(regionName, w, h, rgba, mesh.Contains(regionName) == false));
-            }
-
-            if (missing.Count > 0)
-            {
-                throw new SpineFormatException(Loc.T("이미지 폴더 {0}에 없는 이미지: {1}", imagesDir, string.Join(", ", missing)));
             }
 
             List<Page> pages = PackPages(regions);
@@ -141,7 +140,9 @@ namespace NKStudio.SpineEventInjector.Export
             }
 
             result.AtlasText = string.Join("\n", lines) + "\n";
-            result.AtlasMessage = null;
+            result.AtlasMessage = missing.Count > 0
+                ? Loc.T("이미지 폴더 {0}에 없는 이미지는 그리지 않습니다: {1}", imagesDir, string.Join(", ", missing))
+                : null;
         }
 
         static string Line(string key, int a, int b, int c, int d) =>

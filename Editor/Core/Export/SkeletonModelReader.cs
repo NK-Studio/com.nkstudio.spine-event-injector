@@ -52,6 +52,15 @@ namespace NKStudio.SpineEventInjector.Export
             [40] = new TimelineInfo("sliderMix", 1),
         };
 
+        // 3.8 타임라인 종류 번호 → 4.x 종류 번호(Spine 3.8.75 CLI 로 만든 표본에서 확인)
+        static readonly Dictionary<long, long> Types38 = new Dictionary<long, long>
+        {
+            [26] = 0, [25] = 1, [24] = 2, [68] = 3, [81] = 4, [27] = 5, [51] = 6, [57] = 7, [67] = 8,
+            [74] = 9, [73] = 10, [75] = 11, [36] = 12, [40] = 13,
+        };
+
+        const double Unset = 2147483648.0; // 쓰지 않은 손잡이(SkeletonJsonWriter 와 같은 값)
+
         // 곡선이 붙는 채널 수(나머지 값은 계단)
         static readonly Dictionary<long, int> CurveChannels = new Dictionary<long, int>
         {
@@ -105,6 +114,20 @@ namespace NKStudio.SpineEventInjector.Export
             }
 
             return skeletons.Select(s => new SkeletonModelReader(project).Read(s)).ToList();
+        }
+
+        /// <summary>스켈레톤마다 (이름, 모델을 읽는 함수). 이름만 먼저 알고 모델은 필요할 때 읽는다.</summary>
+        public static List<(string Name, Func<SkeletonModel> Read)> Readers(ProjectView project)
+        {
+            List<Node> skeletons = project.Doc.Of("Skeleton").ToList();
+            if (skeletons.Count == 0)
+            {
+                throw new SpineFormatException(Loc.T("스켈레톤이 없습니다"));
+            }
+
+            return skeletons
+                .Select(s => (project.GetString(s, 1), (Func<SkeletonModel>)(() => new SkeletonModelReader(project).Read(s))))
+                .ToList();
         }
 
         // ------------------------------------------------------------ 작은 도우미
@@ -410,7 +433,7 @@ namespace NKStudio.SpineEventInjector.Export
                         o.Target = Name(NodeOf(c, 3, "Bone"));
                         o.Mix = F(c, 5, 1.0);
                         o.Softness = F(c, 14);
-                        o.BendPositive = I(c, 16, 1) != 0;
+                        o.BendPositive = _p.Keys38 ? I(c, 4, 2) != 1 : I(c, 16, 1) != 0; // 3.8: 필드 4 가 굽힘 방향(1 음, 2 양)
                         o.Compress = I(c, 9) != 0;
                         o.Stretch = I(c, 11) != 0;
                         o.Uniform = I(c, 13) != 0;
@@ -429,9 +452,10 @@ namespace NKStudio.SpineEventInjector.Export
                         o.Relative = I(c, 21) != 0;
                         o.Mixes[ModelConstraint.MixRotate] = F(c, 8, 1.0);
                         o.Mixes[ModelConstraint.MixX] = F(c, 4, 1.0);
-                        o.Mixes[ModelConstraint.MixY] = F(c, 23, 1.0);
+                        // 3.8 은 이동·크기 mix 가 축마다 따로가 아니다(필드 23·25 없음) → x 값을 y 에도 쓴다
+                        o.Mixes[ModelConstraint.MixY] = F(c, 23, _p.Keys38 ? F(c, 4, 1.0) : 1.0);
                         o.Mixes[ModelConstraint.MixScaleX] = F(c, 10, 1.0);
-                        o.Mixes[ModelConstraint.MixScaleY] = F(c, 25, 1.0);
+                        o.Mixes[ModelConstraint.MixScaleY] = F(c, 25, _p.Keys38 ? F(c, 10, 1.0) : 1.0);
                         o.Mixes[ModelConstraint.MixShearY] = F(c, 12, 1.0);
                         o.Properties = TransformProps(c);
                         break;
@@ -447,7 +471,7 @@ namespace NKStudio.SpineEventInjector.Export
                         o.Rotation = F(c, 10);
                         o.Mixes[ModelConstraint.MixRotate] = F(c, 8, 1.0);
                         o.Mixes[ModelConstraint.MixX] = F(c, 6, 1.0);
-                        o.Mixes[ModelConstraint.MixY] = F(c, 23, 1.0);
+                        o.Mixes[ModelConstraint.MixY] = F(c, 23, _p.Keys38 ? F(c, 6, 1.0) : 1.0);
                         break;
                     case "PhysicsConstraint":
                     {
@@ -805,6 +829,16 @@ namespace NKStudio.SpineEventInjector.Export
                 return o;
             }
 
+            if (a.Cls == "PointAtt")
+            {
+                o.Type = "point";
+                o.X = F(a, 6);
+                o.Y = F(a, 7);
+                o.Rotation = F(a, 8);
+                o.Color = Rgba(LeafColor(a, 9) ?? new[] { 241, 241, 0, 255 });
+                return o;
+            }
+
             throw new SpineFormatException(Loc.T("아직 지원하지 않는 첨부: {0}", a.Cls));
         }
 
@@ -868,6 +902,17 @@ namespace NKStudio.SpineEventInjector.Export
             if (tl.F.TryGetValue("type", out FieldValue type))
             {
                 return (long)type.Value;
+            }
+
+            if (_p.Keys38)
+            {
+                long raw = (long)_p.Leaf(_p.GetNode(tl, 1, "TimelineType"));
+                if (Types38.TryGetValue(raw, out long code) == false)
+                {
+                    throw new SpineFormatException(Loc.T("아직 지원하지 않는 타임라인 종류 {0}", "3.8:" + raw));
+                }
+
+                return code;
             }
 
             return (long)_p.Leaf(_p.GetNode(tl, 9));
@@ -973,12 +1018,150 @@ namespace NKStudio.SpineEventInjector.Export
             }
 
             CurveChannels.TryGetValue(ty, out int nc);
-            foreach (Node k in TimelineKeys(tl))
+            List<Node> keyNodes = TimelineKeys(tl);
+            foreach (Node k in keyNodes)
             {
                 t.Keys.Add(Key(k, ty, info.ValueCount, nc));
             }
 
+            if (_p.Keys38)
+            {
+                if (kind == "rotate")
+                {
+                    Unwrap38(t.Keys);
+                }
+
+                Handles38(t.Keys, keyNodes, nc);
+            }
+
             return t;
+        }
+
+        /// <summary>
+        /// 3.8 회전 키는 가까운 쪽으로 돌도록 보간한다(차이를 -180~180 으로 접는다). 4.x 는 값을 그대로 보간하므로
+        /// 앞 키와의 차이를 접어 이어 붙인 값으로 바꾼다(Spine 4.x 가 3.8 프로젝트를 열 때와 같다).
+        /// </summary>
+        static void Unwrap38(List<ModelKey> keys)
+        {
+            for (int i = 1; i < keys.Count; i++)
+            {
+                double prev = keys[i - 1].Values[0];
+                double delta = keys[i].Values[0] - prev;
+                delta -= 360.0 * Math.Floor((delta + 180.0) / 360.0);
+                keys[i].Values[0] = prev + delta;
+            }
+        }
+
+        /// <summary>
+        /// 3.8 곡선 → 4.x 손잡이. 3.8 은 키마다 정규화된 곡선 하나(c1 c2 c3 c4, 시간·값 모두 0~1)를 모든 채널에 쓴다.
+        /// 4.x 는 채널마다 (시간, 값) 손잡이 둘: 이 키에서 나가는 것과 다음 키로 들어가는 것.
+        /// </summary>
+        void Handles38(List<ModelKey> keys, List<Node> nodes, int channels)
+        {
+            foreach (ModelKey k in keys)
+            {
+                k.Handles = Enumerable.Range(0, channels).Select(_ => new[] { Unset, Unset, Unset, Unset }).ToList();
+            }
+
+            for (int i = 0; i + 1 < keys.Count; i++)
+            {
+                ModelKey a = keys[i];
+                ModelKey b = keys[i + 1];
+                if (a.Curve != "bezier")
+                {
+                    continue;
+                }
+
+                if (a.Dense != null && b.Dense != null && SameDense(a.Dense, b.Dense))
+                {
+                    a.Curve = "linear"; // 모양이 같은 변형 키 사이는 곡선이 뜻이 없다(Spine 도 계단으로 내보낸다)
+                    continue;
+                }
+
+                double c1 = F(nodes[i], 4, 0.25);
+                double c2 = F(nodes[i], 5);
+                double c3 = F(nodes[i], 6, 0.75);
+                double c4 = F(nodes[i], 7, 1.0);
+                double dt = b.Frame - a.Frame;
+                for (int c = 0; c < channels; c++)
+                {
+                    double v0 = 0.0;
+                    double v1 = 1.0; // 값 없는 타임라인(변형): 곡선은 0→1 비율
+                    if (a.Values.Count > c && b.Values.Count > c)
+                    {
+                        v0 = a.Values[c];
+                        v1 = b.Values[c];
+                    }
+
+                    a.Handles[c][2] = a.Frame + dt * c1;
+                    a.Handles[c][3] = v0 + (v1 - v0) * c2;
+                    b.Handles[c][0] = a.Frame + dt * c3;
+                    b.Handles[c][1] = v0 + (v1 - v0) * c4;
+                }
+            }
+        }
+
+        static bool SameDense(List<double> a, List<double> b)
+        {
+            if (a.Count != b.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (Math.Abs(a[i] - b[i]) > 0.0001)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        static double Byte01(long bits, int shift) => ((bits >> shift) & 0xFF) / 255.0;
+
+        long Bits38(Node k, string key)
+        {
+            int at = k.F[key].At;
+            byte[] b = _p.Body;
+            return ((long)b[at] << 24) | ((long)b[at + 1] << 16) | ((long)b[at + 2] << 8) | b[at + 3];
+        }
+
+        /// <summary>3.8 키의 값(필드 8~11, 17)을 4.x 모델의 채널 순서로 옮긴다.</summary>
+        List<double> Values38(Node k, long ty)
+        {
+            double v8 = F(k, 8);
+            double v9 = F(k, 9);
+            double v10 = F(k, 10);
+            double v11 = F(k, 11);
+            switch (ty)
+            {
+                case 0: case 9: case 10:
+                    return new List<double> { v8 };
+                case 1: case 2: case 3:
+                    return new List<double> { v8, v9 };
+                case 4:
+                {
+                    // 색은 float 비트에 ABGR 로 들어 있다(알파는 아래 1비트가 깎여 있어 필드 10 의 값을 쓴다). 9 = 어두운 색.
+                    // float 로 읽은 값은 NaN 비트가 바뀔 수 있어 본문의 바이트를 그대로 쓴다
+                    long light = Bits38(k, "8");
+                    long dark = Bits38(k, "9");
+                    return new List<double>
+                    {
+                        Byte01(light, 0), Byte01(light, 8), Byte01(light, 16), Math.Floor(v10 * 255.0 + 1e-6) / 255.0, // 알파는 8비트로 내림(Spine 과 같게)
+                        Byte01(dark, 0), Byte01(dark, 8), Byte01(dark, 16),
+                    };
+                }
+                case 7: // mix, softness, stretch, compress, bend(양의 방향이면 1)
+                    return new List<double> { v8, F(k, 17), v11, v10, v9 > 0 ? 1 : 0 };
+                case 8: // 3.8 은 이동·크기 mix 가 축마다 따로가 아니다
+                    return new List<double> { v8, v9, v9, v10, v10, v11 };
+                case 11:
+                    return new List<double> { v8, v9, v9 };
+                default:
+                    return new List<double>();
+            }
         }
 
         ModelKey Key(Node k, long ty, int n, int nc)
@@ -1024,6 +1207,16 @@ namespace NKStudio.SpineEventInjector.Export
                         payload = _p.Deref(kv.Value.Value) as Node;
                     }
                 }
+            }
+            else if (k.Cls == "Key38") // 3.8: 태그 필드, 값은 8~11·17, 곡선은 정규화된 하나(Handles38 이 손잡이로 바꾼다)
+            {
+                frame = F(k, 2);
+                long c = LeafLong(k, 3, 1);
+                curve = c == 2 ? "bezier" : c == 3 ? "stepped" : "linear";
+                vals = Values38(k, ty);
+                handles = new List<double>();
+                int tag = ty == 5 ? 13 : ty == 6 ? 16 : ty == 12 ? 14 : ty == 13 ? 15 : -1;
+                payload = tag < 0 ? null : _p.GetNode(k, tag);
             }
             else // ~4.2.20: 태그 필드
             {

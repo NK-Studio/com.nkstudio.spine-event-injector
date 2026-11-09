@@ -36,10 +36,11 @@ namespace NKStudio.SpineEventInjector
         /// 내보내기(백그라운드에서 돈다). spineVersion: 파일에 적힌 버전.
         /// 메인 스레드에서 불러야 한다: 에디터 API 가 필요한 스키마 목록은 여기서 미리 구해 넘긴다.
         /// </summary>
-        public static Task<Export> ExportAsync(string spinePath, string spineVersion, string skeleton)
+        /// <param name="loaded">이미 읽은 그래프(창이 열 때 읽은 것). 있으면 파일을 다시 읽지 않는다. 고치지 않는다.</param>
+        public static Task<Export> ExportAsync(string spinePath, string spineVersion, string skeleton, SpineProjectFile loaded = null)
         {
             IReadOnlyList<SpineProjectSchema> schemas = SchemaLibrary.All;
-            return Task.Run(() => ExportNow(spinePath, spineVersion, skeleton, schemas));
+            return Task.Run(() => ExportNow(spinePath, spineVersion, skeleton, schemas, loaded));
         }
 
         // 스켈레톤을 바꿀 때마다 프로젝트 전체를 다시 내보내지 않도록 마지막 결과를 들고 있는다(스켈레톤이 여럿일 때만)
@@ -47,9 +48,17 @@ namespace NKStudio.SpineEventInjector
         static string _cacheKey;
         static List<SpineExportResult> _cache;
 
-        static List<SpineExportResult> ExportAll(string spinePath, string spineVersion, IReadOnlyList<SpineProjectSchema> schemas)
+        // 캐시 키에 쓰는, 읽은 그래프별 번호(같은 그래프면 같은 번호)
+        static readonly System.Runtime.CompilerServices.ConditionalWeakTable<SpineProjectFile, object> LoadedIds =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<SpineProjectFile, object>();
+        static int _nextLoadedId;
+
+        static List<SpineExportResult> ExportAll(string spinePath, string spineVersion, IReadOnlyList<SpineProjectSchema> schemas,
+            SpineProjectFile loaded = null)
         {
-            string key = spinePath + "|" + File.GetLastWriteTimeUtc(spinePath).Ticks;
+            string key = loaded != null
+                ? spinePath + "|loaded" + LoadedIds.GetValue(loaded, _ => System.Threading.Interlocked.Increment(ref _nextLoadedId))
+                : spinePath + "|" + File.GetLastWriteTimeUtc(spinePath).Ticks;
             lock (CacheLock)
             {
                 if (_cacheKey == key)
@@ -57,8 +66,8 @@ namespace NKStudio.SpineEventInjector
                     return _cache;
                 }
 
-                SpineProjectFile file = SpineProjectFile.LoadForExport(File.ReadAllBytes(spinePath), schemas);
-                List<SpineExportResult> results = SpineProjectExporter.Export(file, spinePath, TargetVersion(spineVersion));
+                SpineProjectFile file = loaded ?? SpineProjectFile.LoadForExport(File.ReadAllBytes(spinePath), schemas);
+                List<SpineExportResult> results = SpineProjectExporter.Export(file, spinePath, TargetVersion(spineVersion), lazy: true);
                 _cacheKey = results.Count > 1 ? key : null;
                 _cache = results.Count > 1 ? results : null;
                 return results;
@@ -66,15 +75,21 @@ namespace NKStudio.SpineEventInjector
         }
 
         /// <summary>백그라운드 스레드: 파일만 다룬다(에디터 API 호출 금지).</summary>
-        static Export ExportNow(string spinePath, string spineVersion, string skeleton, IReadOnlyList<SpineProjectSchema> schemas)
+        static Export ExportNow(string spinePath, string spineVersion, string skeleton, IReadOnlyList<SpineProjectSchema> schemas,
+            SpineProjectFile loaded = null)
         {
             var result = new Export();
-            List<SpineExportResult> results = ExportAll(spinePath, spineVersion, schemas);
+            List<SpineExportResult> results = ExportAll(spinePath, spineVersion, schemas, loaded);
             SpineExportResult exported = results.FirstOrDefault(r => r.SkeletonName == skeleton) ?? results.FirstOrDefault();
             if (exported == null)
             {
                 result.Error = Loc.T("프로젝트에 스켈레톤이 없어 미리보기를 만들 수 없습니다");
                 return result;
+            }
+
+            lock (CacheLock)
+            {
+                SpineProjectExporter.Complete(exported); // 고른 스켈레톤만. 만든 결과는 캐시에 남아 다시 고를 때 쓴다
             }
 
             result.Name = exported.SkeletonName;
@@ -139,6 +154,7 @@ namespace NKStudio.SpineEventInjector
             if (asset != null)
             {
                 asset.hideFlags = HideFlags.DontSave;
+                message = export.AtlasMessage; // 미리보기는 되지만 빠진 이미지가 있다
             }
 
             return asset;
