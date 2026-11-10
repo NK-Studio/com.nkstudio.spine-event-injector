@@ -201,7 +201,7 @@ namespace NKStudio.SpineEventInjector
                 _animation = animation;
                 ApplySkin();
                 _skeleton.AnimationState.ClearTracks();
-                _skeleton.Skeleton.SetupPose();
+                SetupPose(_skeleton.Skeleton);
                 _skeleton.AnimationState.SetAnimation(0, clip, true);
                 _bounds = MeasureBounds(animation);
             }
@@ -262,15 +262,44 @@ namespace NKStudio.SpineEventInjector
 
             // HideAndDontSave 로 만들어 열린 씬을 «바뀜»으로 만들지 않는다
             GameObject go = EditorUtility.CreateGameObjectWithHideFlags("Spine Event Injector Preview", HideFlags.HideAndDontSave,
-                typeof(MeshFilter), typeof(MeshRenderer), typeof(SkeletonRenderer), typeof(SkeletonAnimation));
+                PreviewComponents);
             _skeleton = go.GetComponent<SkeletonAnimation>();
             _skeleton.skeletonDataAsset = Asset;
             _skeleton.Initialize(true);
             _util.AddSingleGO(go);
             _built = Asset;
             _animation = null;
-            return _skeleton.IsValid;
+            return IsValid(_skeleton);
         }
+
+        // spine-unity 4.2 와 4.3 의 API 차이. 4.3 이 기본이고, 4.2 UPM 패키지일 때만 asmdef versionDefines 가
+        // SEI_SPINE_4_2 를 켠다(4.3 에서 SkeletonAnimation 은 SkeletonRenderer 를 상속하지 않고 따로 붙는다).
+#if SEI_SPINE_4_2
+        static readonly Type[] PreviewComponents = { typeof(MeshFilter), typeof(MeshRenderer), typeof(SkeletonAnimation) };
+
+        static void SetupPose(Spine.Skeleton skeleton) => skeleton.SetToSetupPose();
+
+        static void SetupPoseSlots(Spine.Skeleton skeleton) => skeleton.SetSlotsToSetupPose();
+
+        static TrackEntry Track(Spine.AnimationState state, int index) => state.GetCurrent(index);
+
+        static bool IsValid(SkeletonAnimation skeleton) => skeleton.valid;
+
+        static void Render(SkeletonAnimation skeleton) => skeleton.LateUpdate();
+#else
+        static readonly Type[] PreviewComponents =
+            { typeof(MeshFilter), typeof(MeshRenderer), typeof(SkeletonRenderer), typeof(SkeletonAnimation) };
+
+        static void SetupPose(Spine.Skeleton skeleton) => skeleton.SetupPose();
+
+        static void SetupPoseSlots(Spine.Skeleton skeleton) => skeleton.SetupPoseSlots();
+
+        static TrackEntry Track(Spine.AnimationState state, int index) => state.GetTrack(index);
+
+        static bool IsValid(SkeletonAnimation skeleton) => skeleton.IsValid;
+
+        static void Render(SkeletonAnimation skeleton) => skeleton.Renderer.LateUpdate();
+#endif
 
         /// <summary>
         /// 애니메이션을 찾는다. .spine 프로젝트의 목록은 이름만 갖지만 내보낸 데이터는 «폴더/이름»으로 부른다.
@@ -335,17 +364,17 @@ namespace NKStudio.SpineEventInjector
                 // SetSkin 은 이전 스킨이 있을 때 «붙어 있던 것만» 바꾸므로, 슬롯을 먼저 비워 새 스킨의 기본 첨부가 붙게 한다
                 skeleton.SetSkin((Skin)null);
                 skeleton.SetSkin(wanted);
-                skeleton.SetupPoseSlots();
+                SetupPoseSlots(skeleton);
             }
         }
 
         void Pose(float seconds)
         {
-            TrackEntry entry = _skeleton.AnimationState.GetTrack(0);
+            TrackEntry entry = Track(_skeleton.AnimationState, 0);
             entry.TrackTime = seconds;
-            _skeleton.Skeleton.SetupPose();
+            SetupPose(_skeleton.Skeleton);
             _skeleton.Update(0f);
-            _skeleton.Renderer.LateUpdate();
+            Render(_skeleton);
         }
 
         /// <summary>애니메이션 몇 군데의 메시 범위를 합쳐 카메라 틀을 잡는다(재생 중 화면이 흔들리지 않게).</summary>

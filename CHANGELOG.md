@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- spine-unity 4.2 프로젝트에서 컴파일이 깨지던 문제 수정: 미리보기가 4.3 전용 API(`SetupPose`·`SetupPoseSlots`·`GetTrack`·`IsValid`·`Renderer`)를 써서 4.2 런타임에서는 에디터 어셈블리가 컴파일되지 않았다. 4.3 을 기본으로 두고, spine-unity 4.2 UPM 패키지일 때 asmdef `versionDefines` 가 `SEI_SPINE_4_2` 를 켜 4.2 API 를 쓴다. 4.2 에서는 `SkeletonAnimation` 이 `SkeletonRenderer` 를 상속하므로 미리보기 객체에 `SkeletonRenderer` 를 따로 붙이지 않는다.
 - Spine 3.8 프로젝트(`.spine`) 지원: 이벤트 읽기·쓰기와 미리보기. 공식 예제 3.8 저장본 30개(3.8.55·3.8.76)와 실제 작업 파일(3.8.72·3.8.73·3.8.75·3.8.99)로 확인했고, 쓴 결과는 Spine 3.8.55·3.8.75·3.8.99 가 그대로 연다.
 - 포인트 첨부(point attachment)를 미리보기용 내보내기에 추가.
 - `.spine` 읽기 속도 개선: 읽는 동안의 할당을 줄였다(바이트 조각을 복사하지 않고, 필드 표를 작은 배열로 두고, float·건너뛰는 구간에 배열을 만들지 않는다). 7MB 본문 기준 읽기 + 확인이 2.6~3.6초에서 0.8~1.6초가 된다.

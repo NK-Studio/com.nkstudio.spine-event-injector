@@ -16,6 +16,12 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.esotericsoftware.spine.spine-unity",
+            "expression": "[4.0,4.3)",
+            "define": "SEI_SPINE_4_2"
+        }
+    ],
     "noEngineReferences": false
 }
