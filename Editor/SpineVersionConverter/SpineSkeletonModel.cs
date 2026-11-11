@@ -525,6 +525,15 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
         public SpineMap<SpineMap<SpineMap<SpineTimelineSet>>> Attachments = new SpineMap<SpineMap<SpineMap<SpineTimelineSet>>>();
         public List<SpineTimelineFrame> DrawOrder = new List<SpineTimelineFrame>();
         public List<SpineTimelineFrame> Events = new List<SpineTimelineFrame>();
+
+        // 4.2·4.3 바이너리에서 읽었을 때만 채운다(아니면 -1): 파일 안에서 이 애니메이션의 타임라인 총수(varint)와
+        // 이벤트 타임라인 블록(키 개수 포함)이 차지한 바이트 범위 [시작, 끝). 이벤트만 바꿔 끼울 때 쓴다.
+        public int BinaryTimelineCountStart = -1;
+        public int BinaryTimelineCountEnd = -1;
+        public int BinaryTimelineCount;
+        public int BinaryEventsStart = -1;
+        public int BinaryEventsEnd = -1;
+        public int BinaryEventKeyCount;
     }
 
     public sealed class SpineSkeleton
@@ -562,5 +571,9 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
         public List<SpineSkin> Skins = new List<SpineSkin>();
         public List<SpineEvent> Events = new List<SpineEvent>();
         public List<SpineAnimation> Animations = new List<SpineAnimation>();
+
+        // 4.2·4.3 바이너리에서 읽었을 때만 채운다(아니면 -1): 이벤트 정의 블록(개수 포함)의 바이트 범위 [시작, 끝).
+        public int BinaryEventsStart = -1;
+        public int BinaryEventsEnd = -1;
     }
 }

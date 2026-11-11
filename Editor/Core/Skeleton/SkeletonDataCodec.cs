@@ -13,8 +13,10 @@ namespace NKStudio.SpineEventInjector.Skeleton
 {
     /// <summary>
     /// 익스포트한 스켈레톤 데이터(.skel.bytes / .json, Spine 4.2·4.3)의 이벤트 읽기·쓰기.
-    /// 바이너리는 SpineVersionConverter 의 공통 모델로 읽고 다시 쓴다. 고치기 전에 «읽고 다시 쓰기 = 원본»을 확인하고,
-    /// 같지 않으면 손대지 않는다(변환기가 그 파일을 온전히 다루지 못한다는 뜻이므로).
+    /// 바이너리는 SpineVersionConverter 의 공통 모델로 읽고, 이벤트 정의 블록과 애니메이션별 이벤트 타임라인 블록만
+    /// 새로 써서 원본 바이트 사이에 끼운다. 나머지 바이트는 건드리지 않는다(변환기가 파일 전체를 Spine 과 같은 바이트로
+    /// 다시 쓰지는 못한다 — 문자열 표의 중복 항목, 타임라인 순서 등). 고치기 전에 «이벤트 블록을 다시 써서 끼운 결과 = 원본»을
+    /// 확인하고, 같지 않으면 손대지 않는다.
     /// JSON 은 문서 트리에서 정의(events)와 애니메이션의 events 배열만 바꾼다. 나머지 값은 그대로지만
     /// 줄바꿈·들여쓰기는 Newtonsoft 형식으로 다시 쓰인다(한 줄짜리 원본은 한 줄로).
     /// </summary>
@@ -108,10 +110,10 @@ namespace NKStudio.SpineEventInjector.Skeleton
             SpineVersion version = VersionOf(file);
             SpineSkeleton skeleton = SpineSkeletonConverter.Read(file, SpineFileFormat.Skel, version);
 
-            // 3.8 은 이벤트 구간만 바꿔 쓰고 나머지 바이트는 원본을 복사한다(변환기의 3.8 쓰기는 원본과 바이트가 달라진다)
+            // 어느 버전이든 이벤트 구간만 바꿔 쓰고 나머지 바이트는 원본을 복사한다(변환기의 전체 쓰기는 원본과 바이트가 달라진다)
             Func<SpineSkeleton, byte[]> write = version == SpineVersion.Version38
                 ? (Func<SpineSkeleton, byte[]>)(s => Spine38BinaryEventPatcher.Write(file, s))
-                : s => SpineSkeletonConverter.Write(s, SpineFileFormat.Skel, version);
+                : s => SpliceEventBlocks(file, s);
             byte[] again = write(skeleton);
             if (again.AsSpan().SequenceEqual(file) == false)
             {
@@ -201,6 +203,59 @@ namespace NKStudio.SpineEventInjector.Skeleton
 
             log?.Add(Loc.T("이벤트 정의 {0}개, 키 {1}개로 다시 썼습니다", edited.Definitions.Count, edited.Keys.Count));
             return write(skeleton);
+        }
+
+        /// <summary>
+        /// 원본 바이트에서 이벤트 정의 블록과 애니메이션별 이벤트 타임라인 블록만 <paramref name="skeleton"/> 의 것으로 바꾼다.
+        /// <paramref name="skeleton"/> 은 바로 이 <paramref name="file"/> 을 읽은 것이어야 한다(블록 위치를 거기서 얻는다).
+        /// </summary>
+        static byte[] SpliceEventBlocks(byte[] file, SpineSkeleton skeleton)
+        {
+            if (skeleton.BinaryEventsStart < 0)
+            {
+                throw new SpineFormatException(Loc.T("Spine 스켈레톤 데이터가 아니거나 버전을 읽을 수 없습니다"));
+            }
+
+            var result = new System.IO.MemoryStream(file.Length + 256);
+            int copied = 0;
+
+            void Replace(int start, int end, byte[] bytes)
+            {
+                if (start < copied || end < start || end > file.Length)
+                {
+                    throw new SpineFormatException(Loc.T("Spine 스켈레톤 데이터가 아니거나 버전을 읽을 수 없습니다"));
+                }
+
+                result.Write(file, copied, start - copied);
+                result.Write(bytes, 0, bytes.Length);
+                copied = end;
+            }
+
+            var definitions = new SpineBinaryOutput();
+            SpineSkeletonBinaryWriter.WriteEventDefinitions(definitions, skeleton.Events);
+            Replace(skeleton.BinaryEventsStart, skeleton.BinaryEventsEnd, definitions.ToArray());
+
+            foreach (SpineAnimation anim in skeleton.Animations)
+            {
+                // 타임라인 총수(런타임의 미리 할당 힌트): 이벤트 타임라인이 생기거나 없어지면 하나 늘리거나 줄인다.
+                // 0 으로 적힌 파일(힌트를 쓰지 않는 도구가 만든 것)은 0 그대로 둔다.
+                int count = anim.BinaryTimelineCount;
+                if (count > 0)
+                {
+                    count += (anim.Events.Count > 0 ? 1 : 0) - (anim.BinaryEventKeyCount > 0 ? 1 : 0);
+                }
+
+                var hint = new SpineBinaryOutput();
+                hint.WriteVarint(Math.Max(count, 0), true);
+                Replace(anim.BinaryTimelineCountStart, anim.BinaryTimelineCountEnd, hint.ToArray());
+
+                var keys = new SpineBinaryOutput();
+                SpineSkeletonBinaryWriter.WriteEventTimeline(keys, skeleton.Events, anim.Events);
+                Replace(anim.BinaryEventsStart, anim.BinaryEventsEnd, keys.ToArray());
+            }
+
+            result.Write(file, copied, file.Length - copied);
+            return result.ToArray();
         }
 
         // ------------------------------------------------------------ JSON

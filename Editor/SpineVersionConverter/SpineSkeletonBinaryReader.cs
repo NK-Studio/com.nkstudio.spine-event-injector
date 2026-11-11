@@ -657,6 +657,13 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
 
         private void ReadEvents()
         {
+            _skeleton.BinaryEventsStart = _input.Position;
+            ReadEventDefinitions();
+            _skeleton.BinaryEventsEnd = _input.Position;
+        }
+
+        private void ReadEventDefinitions()
+        {
             for (int i = 0, n = _input.ReadVarint(true); i < n; i++)
             {
                 var spineEvent = new SpineEvent
@@ -680,8 +687,10 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
         private SpineAnimation ReadAnimation()
         {
             var animation = new SpineAnimation { Name = _input.ReadRequiredString("애니메이션 이름") };
-            // 타임라인 총수 — 런타임의 미리 할당용이라 모델에는 필요 없다.
-            _input.ReadVarint(true);
+            // 타임라인 총수 — 런타임의 미리 할당용이라 모델에는 필요 없다(이벤트만 바꿔 끼울 때를 위해 위치와 값은 적어 둔다).
+            animation.BinaryTimelineCountStart = _input.Position;
+            animation.BinaryTimelineCount = _input.ReadVarint(true);
+            animation.BinaryTimelineCountEnd = _input.Position;
 
             ReadSlotTimelines(animation);
             ReadBoneTimelines(animation);
@@ -701,7 +710,10 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
                 ReadDrawOrderFolders(animation);
             }
 
+            animation.BinaryEventsStart = _input.Position;
             ReadEventTimeline(animation);
+            animation.BinaryEventsEnd = _input.Position;
+            animation.BinaryEventKeyCount = animation.Events.Count;
             if (_isVersion43 == true && _skeleton.Nonessential == true)
             {
                 animation.Color = _input.ReadColor();

@@ -808,18 +808,46 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
 
         private void WriteEvents()
         {
-            _output.WriteVarint(_skeleton.Events.Count, true);
-            foreach (SpineEvent spineEvent in _skeleton.Events)
+            WriteEventDefinitions(_output, _skeleton.Events);
+        }
+
+        /// <summary>이벤트 정의 블록(개수 + 정의들). 4.2·4.3 공통.</summary>
+        public static void WriteEventDefinitions(SpineBinaryOutput output, List<SpineEvent> events)
+        {
+            output.WriteVarint(events.Count, true);
+            foreach (SpineEvent spineEvent in events)
             {
-                _output.WriteString(spineEvent.Name);
-                _output.WriteVarint(spineEvent.IntValue, false);
-                _output.WriteFloat(spineEvent.FloatValue);
-                _output.WriteString(spineEvent.StringValue);
-                _output.WriteString(spineEvent.AudioPath);
+                output.WriteString(spineEvent.Name);
+                output.WriteVarint(spineEvent.IntValue, false);
+                output.WriteFloat(spineEvent.FloatValue);
+                output.WriteString(spineEvent.StringValue);
+                output.WriteString(spineEvent.AudioPath);
                 if (string.IsNullOrEmpty(spineEvent.AudioPath) == false)
                 {
-                    _output.WriteFloat(spineEvent.Volume);
-                    _output.WriteFloat(spineEvent.Balance);
+                    output.WriteFloat(spineEvent.Volume);
+                    output.WriteFloat(spineEvent.Balance);
+                }
+            }
+        }
+
+        /// <summary>한 애니메이션의 이벤트 타임라인 블록(키 개수 + 키들). 4.2·4.3 공통.</summary>
+        public static void WriteEventTimeline(SpineBinaryOutput output, List<SpineEvent> events, List<SpineTimelineFrame> frames)
+        {
+            output.WriteVarint(frames.Count, true);
+            foreach (SpineTimelineFrame frame in frames)
+            {
+                output.WriteFloat(frame.Time);
+                int eventIndex = IndexOf(events, spineEvent => spineEvent.Name == frame.Str1, "이벤트", frame.Str1);
+                SpineEvent eventData = events[eventIndex];
+                output.WriteVarint(eventIndex, true);
+                output.WriteVarint(frame.Int1, false);
+                output.WriteFloat(frame.Value1);
+                // 이벤트 기본 문자열과 같으면 null 을 써서 기본값을 따르게 한다.
+                output.WriteString(frame.Str2 != eventData.StringValue ? frame.Str2 : null);
+                if (eventData.AudioPath != null)
+                {
+                    output.WriteFloat(frame.Value2);
+                    output.WriteFloat(frame.Value3);
                 }
             }
         }
@@ -949,23 +977,7 @@ namespace NKStudio.SpineEventInjector.SpineVersionConverter
                 WriteDrawOrderFolders(animation);
             }
 
-            _output.WriteVarint(animation.Events.Count, true);
-            foreach (SpineTimelineFrame frame in animation.Events)
-            {
-                _output.WriteFloat(frame.Time);
-                int eventIndex = IndexOf(_skeleton.Events, spineEvent => spineEvent.Name == frame.Str1, "이벤트", frame.Str1);
-                SpineEvent eventData = _skeleton.Events[eventIndex];
-                _output.WriteVarint(eventIndex, true);
-                _output.WriteVarint(frame.Int1, false);
-                _output.WriteFloat(frame.Value1);
-                // 이벤트 기본 문자열과 같으면 null 을 써서 기본값을 따르게 한다.
-                _output.WriteString(frame.Str2 != eventData.StringValue ? frame.Str2 : null);
-                if (eventData.AudioPath != null)
-                {
-                    _output.WriteFloat(frame.Value2);
-                    _output.WriteFloat(frame.Value3);
-                }
-            }
+            WriteEventTimeline(_output, _skeleton.Events, animation.Events);
 
             if (_isVersion43 == true && _skeleton.Nonessential == true)
             {
